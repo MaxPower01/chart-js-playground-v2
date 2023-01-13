@@ -8,38 +8,38 @@ const RANDOM_NAMES = [
   "Edgar Bright",
   "Shannon Roberts",
   "Jerald Carson",
-  // "Al Kline",
-  // "Lesley Peters",
-  // "Dallas Hill",
-  // "Jewel Flynn",
-  // "Margo Harrell",
-  // "Silvia Alvarado",
-  // "Eve Burch",
-  // "Christoper Wong",
-  // "Emma Farrell",
-  // "Tomas Newman",
-  // "Raymundo Barnett",
-  // "Rocco Kim",
-  // "Jayson Barber",
-  // "Lessie Lowery",
-  // "Stacie Stafford",
-  // "Garth Vasquez",
-  // "Nickolas Matthews",
-  // "Rosario Gilmore",
-  // "Jillian Hicks",
-  // "Gail Santana",
-  // "Omar Boyd",
-  // "Veronica Riddle",
-  // "Tabitha Weaver",
-  // "Mattie Spence",
-  // "Nelson Ballard",
-  // "Josephine Mccarty",
-  // "Bert Calderon",
-  // "Rowena Patterson",
-  // "Francisca Wilkerson",
-  // "Marva Baldwin",
-  // "Myra Espinoza",
-  // "Heriberto Padilla",
+  "Al Kline",
+  "Lesley Peters",
+  "Dallas Hill",
+  "Jewel Flynn",
+  "Margo Harrell",
+  "Silvia Alvarado",
+  "Eve Burch",
+  "Christoper Wong",
+  "Emma Farrell",
+  "Tomas Newman",
+  "Raymundo Barnett",
+  "Rocco Kim",
+  "Jayson Barber",
+  "Lessie Lowery",
+  "Stacie Stafford",
+  "Garth Vasquez",
+  "Nickolas Matthews",
+  "Rosario Gilmore",
+  "Jillian Hicks",
+  "Gail Santana",
+  "Omar Boyd",
+  "Veronica Riddle",
+  "Tabitha Weaver",
+  "Mattie Spence",
+  "Nelson Ballard",
+  "Josephine Mccarty",
+  "Bert Calderon",
+  "Rowena Patterson",
+  "Francisca Wilkerson",
+  "Marva Baldwin",
+  "Myra Espinoza",
+  "Heriberto Padilla",
   // "Felton Bass",
   // "Effie Combs",
   // "Leonor Campos",
@@ -299,14 +299,16 @@ const RANDOM_NAMES = [
   // "Margery Hunt",
   // "Rebekah Rivas",
   // "Beverley Austin",
-].map((name, i) => `${name} #${i}`);
+].map((name, i) => `${name} ${i}`);
 
-const DISPLAY_COUNT = 10;
-const DATES_COUNT = 10;
-const CHART_UPDATE_DELAY = 1000;
+const DISPLAY_COUNT = 50;
+const DATES_COUNT = 100;
+const CHART_UPDATE_DELAY = 3000;
 const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
 const Y_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
 const X_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
+const IMAGE_URL =
+  "https://img.freepik.com/free-icon/soccer-player_318-174100.jpg";
 
 const dates = Array.from({ length: DATES_COUNT }, (_, i) => {
   const date = new Date();
@@ -316,7 +318,8 @@ const dates = Array.from({ length: DATES_COUNT }, (_, i) => {
 
 const datasets = dates.map((date) => {
   const averages = Array.from({ length: RANDOM_NAMES.length }, () => {
-    const average = Math.round(Math.random() * 10 * 100) / 100;
+    let average = Math.random() * 3 + 7;
+    average = Math.round(average * 100) / 100;
     const rank = 0;
     return { average, rank };
   })
@@ -331,13 +334,15 @@ const datasets = dates.map((date) => {
 
   const datapoints = averages.map((a, i) => {
     const name = RANDOM_NAMES[allNamesIndexes[i]];
+    const normalizedName = name.replace(/\s/g, "-").toLowerCase();
     return {
-      id: `${name}-${i}`,
+      id: `${normalizedName}-${i}`,
       x: a.average,
       y: name,
       rank: a.rank,
       average: a.average,
       name: name,
+      normalizedName: normalizedName,
       date: date.toISOString(),
     };
   });
@@ -352,11 +357,11 @@ const datasets = dates.map((date) => {
 
 const chartId = "chart";
 let chart, canvas, ctx;
+let afterDatasetsUpdateCalled = false;
 
 const initializeChart = () => {
   canvas = document.getElementById(chartId);
   ctx = canvas.getContext("2d");
-  // const { data, ...rest } = config;
   chart = new Chart(ctx, {
     type: "bar",
     data: {
@@ -366,7 +371,14 @@ const initializeChart = () => {
     plugins: [
       {
         afterDatasetsDraw(chart, args, pluginOptions) {
-          setOverlayElements(chart);
+          if (!afterDatasetsUpdateCalled) {
+            return;
+          }
+          afterDatasetsUpdateCalled = false;
+          setOverlayElements(chart, currentDatasetIndex);
+        },
+        afterDatasetsUpdate(chart, args, pluginOptions) {
+          afterDatasetsUpdateCalled = true;
         },
       },
     ],
@@ -396,6 +408,9 @@ const initializeChart = () => {
       plugins: {
         legend: {
           display: false,
+        },
+        tooltip: {
+          enabled: false,
         },
       },
       scales: {
@@ -441,54 +456,92 @@ const initializeChart = () => {
 
 initializeChart();
 
-const setOverlayElements = (chart) => {
-  const { ctx } = chart;
+const setOverlayElements = (chart, datasetIndex) => {
+  const { ctx, scales } = chart;
   const chartDomRect = ctx.canvas.getBoundingClientRect();
-  const { scales } = chart;
   const yTicks = scales.y.ticks;
   let pixelForValue = 0;
   let tickHeight = 0;
-  datasets[0].data.forEach((dataPoint, index) => {
-    if (index >= DISPLAY_COUNT) return;
-    let customElement = document.querySelector(
-      `.${chartId}-custom-element-${index}`
-    );
+  const chartContainer = document.querySelector(".chart-container");
+  datasets[datasetIndex].data.forEach((dataPoint, index) => {
+    // if (index >= DISPLAY_COUNT) return;
+    const cssId = `${chartId}-custom-element-${dataPoint.normalizedName}`;
+    let customElement = document.querySelector(`#${cssId}`);
     if (!customElement) {
       customElement = document.createElement("div");
-      customElement.classList.add(`${chartId}-custom-element-${index}`);
+      customElement.id = cssId;
       customElement.dataset.dataPoint = JSON.stringify(dataPoint);
-      document.body.appendChild(customElement);
+      chartContainer.appendChild(customElement);
     }
+    const pixelForValue = scales.y.getPixelForValue(index);
     if (index == 0) {
-      pixelForValue = scales.y.getPixelForValue(index);
       tickHeight = scales.y.getPixelForValue(index + 1) - pixelForValue;
-    } else {
-      pixelForValue += tickHeight;
     }
-    const datapoint = datasets[0].data[index];
-    const top = pixelForValue + chartDomRect.top;
-    const left = chartDomRect.left + scales.x.left;
+    // else {
+    //   pixelForValue += tickHeight;
+    // }
+    const datapoint = datasets[datasetIndex].data[index];
+    // const top = pixelForValue + chartDomRect.top;
+    const top = pixelForValue;
+    // const left = chartDomRect.left + scales.x.left;
+    const left = scales.x.left;
     const pixelForValueXLeft = scales.x.getPixelForValue(0);
     const pixelForValueXRight = scales.x.getPixelForValue(datapoint.x);
     const width = pixelForValueXRight - pixelForValueXLeft;
+    customElement.style.transition = `all ${Y_SCALE_ANIMATION_DURATION}ms linear`;
     customElement.style.position = "absolute";
     customElement.style.top = `${top}px`;
     customElement.style.left = `${left}px`;
     customElement.style.width = `${width}px`;
-    customElement.style.background = "rgba(255,255,255,0.1)";
+    // customElement.style.background = "rgba(255,100,100,0.1)";
+    customElement.style.border = "1px solid rgba(255,255,255,0.1)";
     customElement.style.transform = `translateY(-${tickHeight / 2}px)`;
     customElement.style.zIndex = "2";
     customElement.style.height = `${tickHeight - 4}px`;
     customElement.style.margin = "2px";
     customElement.style.pointerEvents = "none";
-    customElement.style.transition = `all ${COLOR_ANIMATION_DURATION}ms ease`;
+    customElement.style.display = "flex";
+    customElement.style.alignItems = "center";
+    customElement.style.justifyContent = "flex-end";
+    // Set textcontent of custom element
+    const text = document.createElement("div");
+    // text.style.position = "absolute";
+    // text.style.top = "50%";
+    // text.style.left = "50%";
+    // text.style.transform = "translate(-50%, -50%)";
+    text.style.color = "rgba(255,255,255,0.75)";
+    text.style.fontWeight = "400";
+    text.style.fontSize = "8px";
+    text.style.pointerEvents = "none";
+    text.style.textAlign = "right";
+    text.style.width = "100%";
+    text.style.whiteSpace = "nowrap";
+    text.style.overflow = "hidden";
+    text.style.textOverflow = "ellipsis";
+    text.style.paddingRight = "4px";
+    text.style.fontWeight = "600";
+    text.style.fontStyle = "italic";
+    text.style.font = "'Roboto', sans-serif";
+
+    if (dataPoint.rank > DISPLAY_COUNT) {
+      customElement.style.opacity = "0";
+    } else {
+      customElement.style.opacity = "1";
+    }
+
+    text.textContent = `${datapoint.name} (${datapoint.x})`;
+    customElement.innerHTML = "";
+    customElement.appendChild(text);
   });
 };
 
-setOverlayElements(chart);
-window.addEventListener("resize", (chart) => setOverlayElements(chart));
-
 let currentDatasetIndex = 0;
+
+setOverlayElements(chart, 0);
+window.addEventListener("resize", (chart) => {
+  // chart.update("active");
+  setOverlayElements(chart, currentDatasetIndex);
+});
 
 const updateChart = () => {
   const chartData = chart.config.data;
@@ -540,6 +593,8 @@ const updateChart = () => {
 
 const btnStart = document.getElementById("btn-start");
 btnStart.addEventListener("click", () => {
+  updateChart();
+  currentDatasetIndex++;
   interval = setInterval(() => {
     if (currentDatasetIndex >= datasets.length - 1) {
       clearInterval(interval);
