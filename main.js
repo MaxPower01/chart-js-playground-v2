@@ -303,7 +303,7 @@ const RANDOM_NAMES = [
 
 const DISPLAY_COUNT = 50;
 const DATES_COUNT = 100;
-const CHART_UPDATE_DELAY = 3000;
+const CHART_UPDATE_DELAY = 5000;
 const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
 const Y_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
 const X_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
@@ -317,12 +317,19 @@ const dates = Array.from({ length: DATES_COUNT }, (_, i) => {
 }).sort((a, b) => a - b);
 
 const datasets = dates.map((date) => {
-  const averages = Array.from({ length: RANDOM_NAMES.length }, () => {
-    let average = Math.random() * 3 + 7;
-    average = Math.round(average * 100) / 100;
-    const rank = 0;
-    return { average, rank };
-  })
+  // Random between 1 and 100
+  const average = Math.floor(Math.random() * 100) + 1;
+
+  const averages = [];
+
+  for (let i = 0; i < RANDOM_NAMES.length; i++) {
+    // Random between 0 and 1
+    const random = Math.random() - 0.5;
+    const newAverage = average + random;
+    averages.push({ rank: i + 1, average: Math.round(newAverage * 100) / 100 });
+  }
+
+  const sortedAverages = averages
     .sort((a, b) => b.average - a.average)
     .map((a, i) => ({ ...a, rank: i + 1 }));
 
@@ -332,7 +339,7 @@ const datasets = dates.map((date) => {
   );
   allNamesIndexes.sort(() => Math.random() - 0.5);
 
-  const datapoints = averages.map((a, i) => {
+  const datapoints = sortedAverages.map((a, i) => {
     const name = RANDOM_NAMES[allNamesIndexes[i]];
     const normalizedName = name.replace(/\s/g, "-").toLowerCase();
     return {
@@ -384,7 +391,8 @@ const initializeChart = () => {
     ],
     options: {
       responsive: true,
-      aspectRatio: 2,
+      aspectRatio: 1,
+      maintainAspectRatio: true,
       indexAxis: "y",
       elements: {
         bar: {
@@ -423,7 +431,7 @@ const initializeChart = () => {
           ticks: {
             color: "rgba(255, 255, 255, 0.5)",
           },
-          max: 10,
+          // max: 10,
           grace: "1",
         },
         y: {
@@ -494,7 +502,7 @@ const setOverlayElements = (chart, datasetIndex) => {
     customElement.style.left = `${left}px`;
     customElement.style.width = `${width}px`;
     // customElement.style.background = "rgba(255,100,100,0.1)";
-    customElement.style.border = "1px solid rgba(255,255,255,0.1)";
+    // customElement.style.border = "1px solid rgba(255,255,255,0.1)";
     customElement.style.transform = `translateY(-${tickHeight / 2}px)`;
     customElement.style.zIndex = "2";
     customElement.style.height = `${tickHeight - 4}px`;
