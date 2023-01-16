@@ -301,9 +301,13 @@ const RANDOM_NAMES = [
   // "Beverley Austin",
 ].map((name, i) => `${name} ${i}`);
 
+let canApplyTransitionsOfXAxis = false;
+
+setTimeout(() => (canApplyTransitionsOfXAxis = true), 500);
+
 const DISPLAY_COUNT = 50;
 const DATES_COUNT = 100;
-const CHART_UPDATE_DELAY = 5000;
+const CHART_UPDATE_DELAY = 1000;
 const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
 const Y_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
 const X_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
@@ -408,7 +412,8 @@ const initializeChart = () => {
           easing: "linear",
         },
         x: {
-          duration: X_SCALE_ANIMATION_DURATION,
+          // duration: X_SCALE_ANIMATION_DURATION,
+          duration: 0,
           easing: "linear",
         },
       },
@@ -460,6 +465,10 @@ const initializeChart = () => {
       },
     },
   });
+
+  setTimeout(() => {
+    chart.options.animations.x.duration = X_SCALE_ANIMATION_DURATION;
+  }, 100);
 };
 
 initializeChart();
