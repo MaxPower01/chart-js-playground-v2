@@ -9,37 +9,37 @@ const RANDOM_NAMES = [
   "Shannon Roberts",
   "Jerald Carson",
   "Al Kline",
-  "Lesley Peters",
-  "Dallas Hill",
-  "Jewel Flynn",
-  "Margo Harrell",
-  "Silvia Alvarado",
-  "Eve Burch",
-  "Christoper Wong",
-  "Emma Farrell",
-  "Tomas Newman",
-  "Raymundo Barnett",
-  "Rocco Kim",
-  "Jayson Barber",
-  "Lessie Lowery",
-  "Stacie Stafford",
-  "Garth Vasquez",
-  "Nickolas Matthews",
-  "Rosario Gilmore",
-  "Jillian Hicks",
-  "Gail Santana",
-  "Omar Boyd",
-  "Veronica Riddle",
-  "Tabitha Weaver",
-  "Mattie Spence",
-  "Nelson Ballard",
-  "Josephine Mccarty",
-  "Bert Calderon",
-  "Rowena Patterson",
-  "Francisca Wilkerson",
-  "Marva Baldwin",
-  "Myra Espinoza",
-  "Heriberto Padilla",
+  // "Lesley Peters",
+  // "Dallas Hill",
+  // "Jewel Flynn",
+  // "Margo Harrell",
+  // "Silvia Alvarado",
+  // "Eve Burch",
+  // "Christoper Wong",
+  // "Emma Farrell",
+  // "Tomas Newman",
+  // "Raymundo Barnett",
+  // "Rocco Kim",
+  // "Jayson Barber",
+  // "Lessie Lowery",
+  // "Stacie Stafford",
+  // "Garth Vasquez",
+  // "Nickolas Matthews",
+  // "Rosario Gilmore",
+  // "Jillian Hicks",
+  // "Gail Santana",
+  // "Omar Boyd",
+  // "Veronica Riddle",
+  // "Tabitha Weaver",
+  // "Mattie Spence",
+  // "Nelson Ballard",
+  // "Josephine Mccarty",
+  // "Bert Calderon",
+  // "Rowena Patterson",
+  // "Francisca Wilkerson",
+  // "Marva Baldwin",
+  // "Myra Espinoza",
+  // "Heriberto Padilla",
   // "Felton Bass",
   // "Effie Combs",
   // "Leonor Campos",
@@ -305,7 +305,7 @@ let canApplyTransitionsOfXAxis = false;
 
 setTimeout(() => (canApplyTransitionsOfXAxis = true), 500);
 
-const DISPLAY_COUNT = 50;
+const DISPLAY_COUNT = 10;
 const DATES_COUNT = 100;
 const CHART_UPDATE_DELAY = 1000;
 const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
@@ -346,12 +346,15 @@ const datasets = dates.map((date) => {
   const datapoints = sortedAverages.map((a, i) => {
     const name = RANDOM_NAMES[allNamesIndexes[i]];
     const normalizedName = name.replace(/\s/g, "-").toLowerCase();
+    const { average, rank } = a;
     return {
       id: `${normalizedName}-${i}`,
-      x: a.average,
+      x: average,
+      nextX: null,
+      previousX: null,
       y: name,
-      rank: a.rank,
-      average: a.average,
+      rank: rank,
+      average: average,
       name: name,
       normalizedName: normalizedName,
       date: date.toISOString(),
@@ -364,6 +367,27 @@ const datasets = dates.map((date) => {
     backgroundColor: `rgba(255, 255, 255, 0.1)`,
     borderColor: `rgba(255, 255, 255, 0.1)`,
   };
+});
+
+datasets.forEach((dataset, datasetIndex) => {
+  const { data } = dataset;
+  let previousDataset = datasetIndex > 0 ? datasets[datasetIndex - 1] : null;
+  let nextDataset =
+    datasetIndex < datasets.length - 1 ? datasets[datasetIndex + 1] : null;
+  data.forEach((datapoint) => {
+    if (previousDataset) {
+      const previousDatapoint = previousDataset.data.find(
+        (d) => d.normalizedName == datapoint.normalizedName
+      );
+      datapoint.previousX = previousDatapoint.x;
+    }
+    if (nextDataset) {
+      const nextDatapoint = nextDataset.data.find(
+        (d) => d.normalizedName == datapoint.normalizedName
+      );
+      datapoint.nextX = nextDatapoint.x;
+    }
+  });
 });
 
 const chartId = "chart";
@@ -395,8 +419,8 @@ const initializeChart = () => {
     ],
     options: {
       responsive: true,
-      aspectRatio: 1,
-      maintainAspectRatio: true,
+      // aspectRatio: 1,
+      // maintainAspectRatio: true,
       indexAxis: "y",
       elements: {
         bar: {
@@ -430,13 +454,19 @@ const initializeChart = () => {
         x: {
           display: true,
           grid: {
-            color: "rgba(255, 255, 255, 0.00)",
-            borderColor: "rgba(255, 255, 255, 0.1)",
+            color: "rgba(255, 255, 255, 0.05)",
           },
           ticks: {
-            color: "rgba(255, 255, 255, 0.5)",
+            color: function (context) {
+              return "white";
+            },
+            font: function (context) {
+              return { size: 12, style: "normal" };
+            },
           },
-          // max: 10,
+          border: {
+            color: "rgba(255, 255, 255, 0.25)",
+          },
           grace: "1",
         },
         y: {
@@ -444,17 +474,19 @@ const initializeChart = () => {
           beginAtZero: true,
           position: "left",
           grid: {
-            color: "rgba(255, 255, 255, 0.00)",
-            borderColor: "rgba(255, 255, 255, 0.1)",
+            color: "rgba(255, 255, 255, 0.1)",
+          },
+          border: {
+            color: "rgba(255, 255, 255, 0.25)",
           },
           min: 0,
           max: DISPLAY_COUNT - 1,
           ticks: {
             color: function (context) {
-              return "rgba(255,255,255,0.75)";
+              return "white";
             },
             font: function (context) {
-              return { weight: "400", size: 12 };
+              return { size: 14, style: "normal", weight: "bold" };
             },
             callback: function (val, index) {
               const datapoint = datasets[0].data[index];
@@ -475,10 +507,14 @@ initializeChart();
 
 const setOverlayElements = (chart, datasetIndex) => {
   const { ctx, scales } = chart;
-  const chartDomRect = ctx.canvas.getBoundingClientRect();
-  const yTicks = scales.y.ticks;
-  let pixelForValue = 0;
+  // const chartDomRect = ctx.canvas.getBoundingClientRect();
+  // const yTicks = scales.y.ticks;
+  // let pixelForValue = 0;
   let tickHeight = 0;
+  let height = 0;
+  const ADJUSTMENT = 4;
+  const ADJUSTMENT_2 = 8;
+  let imageWidth = 0;
   const chartContainer = document.querySelector(".chart-container");
   datasets[datasetIndex].data.forEach((dataPoint, index) => {
     // if (index >= DISPLAY_COUNT) return;
@@ -493,62 +529,143 @@ const setOverlayElements = (chart, datasetIndex) => {
     const pixelForValue = scales.y.getPixelForValue(index);
     if (index == 0) {
       tickHeight = scales.y.getPixelForValue(index + 1) - pixelForValue;
+      height = tickHeight;
+      imageWidth = height / 1.75;
     }
-    // else {
-    //   pixelForValue += tickHeight;
-    // }
     const datapoint = datasets[datasetIndex].data[index];
-    // const top = pixelForValue + chartDomRect.top;
     const top = pixelForValue;
-    // const left = chartDomRect.left + scales.x.left;
     const left = scales.x.left;
     const pixelForValueXLeft = scales.x.getPixelForValue(0);
     const pixelForValueXRight = scales.x.getPixelForValue(datapoint.x);
     const width = pixelForValueXRight - pixelForValueXLeft;
+
     customElement.style.transition = `all ${Y_SCALE_ANIMATION_DURATION}ms linear`;
     customElement.style.position = "absolute";
     customElement.style.top = `${top}px`;
     customElement.style.left = `${left}px`;
     customElement.style.width = `${width}px`;
-    // customElement.style.background = "rgba(255,100,100,0.1)";
-    // customElement.style.border = "1px solid rgba(255,255,255,0.1)";
     customElement.style.transform = `translateY(-${tickHeight / 2}px)`;
     customElement.style.zIndex = "2";
-    customElement.style.height = `${tickHeight - 4}px`;
-    customElement.style.margin = "2px";
+    customElement.style.height = `${height}px`;
     customElement.style.pointerEvents = "none";
     customElement.style.display = "flex";
     customElement.style.alignItems = "center";
     customElement.style.justifyContent = "flex-end";
-    // Set textcontent of custom element
-    const text = document.createElement("div");
-    // text.style.position = "absolute";
-    // text.style.top = "50%";
-    // text.style.left = "50%";
-    // text.style.transform = "translate(-50%, -50%)";
-    text.style.color = "rgba(255,255,255,0.75)";
-    text.style.fontWeight = "400";
-    text.style.fontSize = "8px";
-    text.style.pointerEvents = "none";
-    text.style.textAlign = "right";
-    text.style.width = "100%";
-    text.style.whiteSpace = "nowrap";
-    text.style.overflow = "hidden";
-    text.style.textOverflow = "ellipsis";
-    text.style.paddingRight = "4px";
-    text.style.fontWeight = "600";
-    text.style.fontStyle = "italic";
-    text.style.font = "'Roboto', sans-serif";
+    customElement.style.font = "'Roboto', sans-serif";
+
+    const { x, nextX, previousX, name } = datapoint;
+    console.log({ x, nextX, previousX, name });
+
+    // Find 10 numbers with 2 decimal places between x and nextX
+    const numbers = [];
+    const step = (nextX - x) / 10;
+    for (let i = 0; i < 10; i++) {
+      numbers.push((x + step * i).toFixed(2));
+    }
+    numbers.push(nextX.toFixed(2));
+
+    const innerHtml = `
+      <div class="inner-content">
+        <div class="name">
+          ${name}
+        </div>
+        <div class="avatar">
+        <img src="${IMAGE_URL}" />
+        </div>
+        <div class="value">
+          ${x}
+        </div>
+      </div>
+    `;
+    customElement.innerHTML = innerHtml;
+
+    const innerContentElement = customElement.querySelector(".inner-content");
+    innerContentElement.style.display = "flex";
+    innerContentElement.style.alignItems = "center";
+    innerContentElement.style.justifyContent = "flex-end";
+    innerContentElement.style.width = "100%";
+    innerContentElement.style.height = "100%";
+    innerContentElement.style.position = "relative";
+    innerContentElement.style.padding = `${ADJUSTMENT}px ${ADJUSTMENT_2}px`;
+
+    const nameElement = customElement.querySelector(".name");
+    nameElement.style.color = "white";
+    nameElement.style.fontWeight = "600";
+    nameElement.style.fontSize = "80%";
+    nameElement.style.fontStyle = "italic";
+
+    const avatarElement = customElement.querySelector(".avatar");
+    avatarElement.style.width = `${imageWidth}px`;
+    avatarElement.style.height = `${imageWidth}px`;
+    avatarElement.style.marginLeft = `${ADJUSTMENT_2}px`;
+
+    const imgElement = avatarElement.querySelector("img");
+    imgElement.style.width = `100%`;
+    imgElement.style.height = `100%`;
+    imgElement.style.borderRadius = "100%";
+    // imgElement.style.border = "1px solid rgba(255,255,255,0.25)";
+    imgElement.style.background = "black";
+
+    const valueElement = customElement.querySelector(".value");
+    valueElement.style.position = "absolute";
+    valueElement.style.right = "0";
+    valueElement.style.top = "50%";
+    valueElement.style.transform = `translate(calc(100% + 4px), -50%)`;
+    valueElement.style.marginLeft = `${ADJUSTMENT_2}px`;
+    valueElement.style.fontWeight = "900";
+    // valueElement.style.fontSize = "125%";
+    valueElement.style.fontStyle = "italic";
+
+    /* 
+      div::after {
+  font: 800 40px system-ui;
+  content: counter(count);
+  animation: counter 5s linear infinite alternate;
+  counter-reset: count 0;
+}
+
+@keyframes counter {
+  0% {
+    counter-increment: count 0;
+  }
+  10% {
+    counter-increment: count 1;
+  }
+  20% {
+    counter-increment: count 2;
+  }
+  30% {
+    counter-increment: count 3;
+  }
+  40% {
+    counter-increment: count 4;
+  }
+  50% {
+    counter-increment: count 5;
+  }
+  60% {
+    counter-increment: count 6;
+  }
+  70% {
+    counter-increment: count 7;
+  }
+  80% {
+    counter-increment: count 8;
+  }
+  90% {
+    counter-increment: count 9;
+  }
+  100% {
+    counter-increment: count 10;
+  }
+}
+    */
 
     if (dataPoint.rank > DISPLAY_COUNT) {
       customElement.style.opacity = "0";
     } else {
       customElement.style.opacity = "1";
     }
-
-    text.textContent = `${datapoint.name} (${datapoint.x})`;
-    customElement.innerHTML = "";
-    customElement.appendChild(text);
   });
 };
 

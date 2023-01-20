@@ -15,10 +15,12 @@ body {
 	gap: 8px;
 	background-color: #1e1e24;
 	color: white;
+	font-family: 'Roboto', sans-serif;
 }
 
 .chart-container {
-	width: 100%;
+	width: 80%;
 	position: relative;
-	overflow: hidden;
+	/* overflow: hidden; */
+	padding-right: 40px;
 }
