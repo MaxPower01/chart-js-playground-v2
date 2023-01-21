@@ -307,10 +307,13 @@ setTimeout(() => (canApplyTransitionsOfXAxis = true), 500);
 
 const DISPLAY_COUNT = 10;
 const DATES_COUNT = 100;
-const CHART_UPDATE_DELAY = 1000;
+const TRANSITION_VALUES_COUNT = 100;
+
+const CHART_UPDATE_DELAY = 2000;
 const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
 const Y_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
 const X_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
+
 const IMAGE_URL =
   "https://img.freepik.com/free-icon/soccer-player_318-174100.jpg";
 
@@ -321,20 +324,18 @@ const dates = Array.from({ length: DATES_COUNT }, (_, i) => {
 }).sort((a, b) => a - b);
 
 const datasets = dates.map((date) => {
-  // Random between 1 and 100
-  const average = Math.floor(Math.random() * 100) + 1;
-
-  const averages = [];
+  // const value = Math.random() * 50 + 50;
+  const value = Math.random() * 100;
+  const values = [];
 
   for (let i = 0; i < RANDOM_NAMES.length; i++) {
-    // Random between 0 and 1
     const random = Math.random() - 0.5;
-    const newAverage = average + random;
-    averages.push({ rank: i + 1, average: Math.round(newAverage * 100) / 100 });
+    const newValue = value + random;
+    values.push({ rank: i + 1, value: Math.round(newValue * 100) / 100 });
   }
 
-  const sortedAverages = averages
-    .sort((a, b) => b.average - a.average)
+  const sortedValues = values
+    .sort((a, b) => b.value - a.value)
     .map((a, i) => ({ ...a, rank: i + 1 }));
 
   const allNamesIndexes = Array.from(
@@ -343,19 +344,22 @@ const datasets = dates.map((date) => {
   );
   allNamesIndexes.sort(() => Math.random() - 0.5);
 
-  const datapoints = sortedAverages.map((a, i) => {
+  const datapoints = sortedValues.map((a, i) => {
     const name = RANDOM_NAMES[allNamesIndexes[i]];
     const normalizedName = name.replace(/\s/g, "-").toLowerCase();
-    const { average, rank } = a;
+    const displayName = name.split(" ").slice(0, 2).join(" ");
+    const { value: value, rank } = a;
     return {
       id: `${normalizedName}-${i}`,
-      x: average,
-      nextX: null,
-      previousX: null,
+      x: value,
+      nextDatapoint: null,
+      previousDatapoint: null,
+      transitionValues: [],
       y: name,
       rank: rank,
-      average: average,
+      value: value,
       name: name,
+      displayName: displayName,
       normalizedName: normalizedName,
       date: date.toISOString(),
     };
@@ -364,8 +368,10 @@ const datasets = dates.map((date) => {
   return {
     label: date.toISOString(),
     data: datapoints,
-    backgroundColor: `rgba(255, 255, 255, 0.1)`,
-    borderColor: `rgba(255, 255, 255, 0.1)`,
+    // backgroundColor: `rgba(255, 255, 255, 0.1)`,
+    backgroundColor: `rgba(255, 255, 255, 0)`,
+    // borderColor: `rgba(255, 255, 255, 0.1)`,
+    borderColor: `rgba(255, 255, 255, 0)`,
   };
 });
 
@@ -379,13 +385,50 @@ datasets.forEach((dataset, datasetIndex) => {
       const previousDatapoint = previousDataset.data.find(
         (d) => d.normalizedName == datapoint.normalizedName
       );
-      datapoint.previousX = previousDatapoint.x;
+      datapoint.previousDatapoint = previousDatapoint;
+      const min = Math.min(datapoint.value, previousDatapoint.value);
+      const max = Math.max(datapoint.value, previousDatapoint.value);
+      let transitionValues = Array.from(
+        { length: TRANSITION_VALUES_COUNT },
+        (_, i) => {
+          if (i == 0) return datapoint.value;
+          if (i == TRANSITION_VALUES_COUNT - 1) return previousDatapoint.value;
+          const newValue =
+            min + (max - min) * (i / (TRANSITION_VALUES_COUNT - 1));
+          // If it's 1.4, it should display as 1.40, not 1.4
+          const parsedValue = Math.round(newValue * 100) / 100;
+          return parsedValue;
+        }
+      ).sort((a, b) => {
+        if (datapoint.value > previousDatapoint.value) {
+          return a - b;
+        } else {
+          return b - a;
+        }
+      });
+      datapoint.transitionValues = transitionValues;
+      if (datapoint.value < previousDatapoint.value) {
+        console.assert(
+          transitionValues[0] > transitionValues[transitionValues.length - 1],
+          "The first transition value should be greater than the last one."
+        );
+      } else if (datapoint.value > previousDatapoint.value) {
+        console.assert(
+          transitionValues[0] < transitionValues[transitionValues.length - 1],
+          "The first transition value should be less than the last one."
+        );
+      } else {
+        console.assert(
+          transitionValues[0] == transitionValues[transitionValues.length - 1],
+          "The first transition value should be equal to the last one."
+        );
+      }
     }
     if (nextDataset) {
       const nextDatapoint = nextDataset.data.find(
         (d) => d.normalizedName == datapoint.normalizedName
       );
-      datapoint.nextX = nextDatapoint.x;
+      datapoint.nextDatapoint = nextDatapoint;
     }
   });
 });
@@ -393,6 +436,8 @@ datasets.forEach((dataset, datasetIndex) => {
 const chartId = "chart";
 let chart, canvas, ctx;
 let afterDatasetsUpdateCalled = false;
+
+const IS_TOUCH_DEVICE = "ontouchstart" in window;
 
 const initializeChart = () => {
   canvas = document.getElementById(chartId);
@@ -419,8 +464,8 @@ const initializeChart = () => {
     ],
     options: {
       responsive: true,
-      // aspectRatio: 1,
-      // maintainAspectRatio: true,
+      aspectRatio: IS_TOUCH_DEVICE ? 1 : 2,
+      maintainAspectRatio: true,
       indexAxis: "y",
       elements: {
         bar: {
@@ -447,7 +492,7 @@ const initializeChart = () => {
           display: false,
         },
         tooltip: {
-          enabled: false,
+          enabled: true,
         },
       },
       scales: {
@@ -467,7 +512,9 @@ const initializeChart = () => {
           border: {
             color: "rgba(255, 255, 255, 0.25)",
           },
-          grace: "1",
+          min: 0,
+          max: 100,
+          // grace: 10,
         },
         y: {
           display: true,
@@ -500,7 +547,7 @@ const initializeChart = () => {
 
   setTimeout(() => {
     chart.options.animations.x.duration = X_SCALE_ANIMATION_DURATION;
-  }, 100);
+  }, 250);
 };
 
 initializeChart();
@@ -523,9 +570,10 @@ const setOverlayElements = (chart, datasetIndex) => {
     if (!customElement) {
       customElement = document.createElement("div");
       customElement.id = cssId;
-      customElement.dataset.dataPoint = JSON.stringify(dataPoint);
+      // customElement.dataset.dataPoint = JSON.stringify(dataPoint);
       chartContainer.appendChild(customElement);
     }
+    if (!scales) return;
     const pixelForValue = scales.y.getPixelForValue(index);
     if (index == 0) {
       tickHeight = scales.y.getPixelForValue(index + 1) - pixelForValue;
@@ -543,61 +591,69 @@ const setOverlayElements = (chart, datasetIndex) => {
     customElement.style.position = "absolute";
     customElement.style.top = `${top}px`;
     customElement.style.left = `${left}px`;
-    customElement.style.width = `${width}px`;
+    // customElement.style.width = `${width}px`;
+    customElement.style.width = `${100}%`;
     customElement.style.transform = `translateY(-${tickHeight / 2}px)`;
     customElement.style.zIndex = "2";
     customElement.style.height = `${height}px`;
     customElement.style.pointerEvents = "none";
     customElement.style.display = "flex";
     customElement.style.alignItems = "center";
-    customElement.style.justifyContent = "flex-end";
+    customElement.style.justifyContent = "flex-start";
     customElement.style.font = "'Roboto', sans-serif";
+    customElement.style.pointerEvents = "none";
+    customElement.style.overflow = "hidden";
 
-    const { x, nextX, previousX, name } = datapoint;
-    console.log({ x, nextX, previousX, name });
+    const { value, displayName, transitionValues, nextDatapoint } = datapoint;
+    const transitionValuesCopy = [...transitionValues];
 
-    // Find 10 numbers with 2 decimal places between x and nextX
-    const numbers = [];
-    const step = (nextX - x) / 10;
-    for (let i = 0; i < 10; i++) {
-      numbers.push((x + step * i).toFixed(2));
-    }
-    numbers.push(nextX.toFixed(2));
-
-    const innerHtml = `
+    let innerContentElement = customElement.querySelector(".inner-content");
+    if (!innerContentElement) {
+      const innerHtml = `
       <div class="inner-content">
-        <div class="name">
-          ${name}
-        </div>
-        <div class="avatar">
-        <img src="${IMAGE_URL}" />
-        </div>
-        <div class="value">
-          ${x}
-        </div>
+      <div class="name">
+      ${displayName}
       </div>
-    `;
-    customElement.innerHTML = innerHtml;
+      <div class="avatar">
+      <img src="${IMAGE_URL}" />
+      </div>
+      <div class="value">
+      ${value}
+      </div>
+      </div>
+      `;
+      customElement.innerHTML = innerHtml;
+      innerContentElement = customElement.querySelector(".inner-content");
+    }
 
-    const innerContentElement = customElement.querySelector(".inner-content");
+    innerContentElement.style.transition = `max-width ${Y_SCALE_ANIMATION_DURATION}ms linear`;
     innerContentElement.style.display = "flex";
     innerContentElement.style.alignItems = "center";
     innerContentElement.style.justifyContent = "flex-end";
     innerContentElement.style.width = "100%";
-    innerContentElement.style.height = "100%";
+    innerContentElement.style.maxWidth = `${width}px`;
+    innerContentElement.style.height = `calc(100% - ${ADJUSTMENT * 2}px)`;
     innerContentElement.style.position = "relative";
-    innerContentElement.style.padding = `${ADJUSTMENT}px ${ADJUSTMENT_2}px`;
+    innerContentElement.style.margin = `${ADJUSTMENT}px ${0}px`;
+    innerContentElement.style.padding = `${0}px ${ADJUSTMENT}px`;
+    innerContentElement.style.background = "rgba(255,255,255,0.1)";
+    innerContentElement.style.textAlign = "right";
+    // innerContentElement.style.overflow = "hidden";
 
     const nameElement = customElement.querySelector(".name");
     nameElement.style.color = "white";
     nameElement.style.fontWeight = "600";
     nameElement.style.fontSize = "80%";
     nameElement.style.fontStyle = "italic";
+    nameElement.style.whiteSpace = "nowrap";
+    nameElement.style.overflow = "hidden";
+    nameElement.style.textOverflow = "ellipsis";
 
     const avatarElement = customElement.querySelector(".avatar");
     avatarElement.style.width = `${imageWidth}px`;
     avatarElement.style.height = `${imageWidth}px`;
     avatarElement.style.marginLeft = `${ADJUSTMENT_2}px`;
+    avatarElement.style.flexShrink = "0";
 
     const imgElement = avatarElement.querySelector("img");
     imgElement.style.width = `100%`;
@@ -612,60 +668,33 @@ const setOverlayElements = (chart, datasetIndex) => {
     valueElement.style.top = "50%";
     valueElement.style.transform = `translate(calc(100% + 4px), -50%)`;
     valueElement.style.marginLeft = `${ADJUSTMENT_2}px`;
-    valueElement.style.fontWeight = "900";
-    // valueElement.style.fontSize = "125%";
+    valueElement.style.fontWeight = "300";
+    // valueElement.style.fontSize = "80%";
     valueElement.style.fontStyle = "italic";
-
-    /* 
-      div::after {
-  font: 800 40px system-ui;
-  content: counter(count);
-  animation: counter 5s linear infinite alternate;
-  counter-reset: count 0;
-}
-
-@keyframes counter {
-  0% {
-    counter-increment: count 0;
-  }
-  10% {
-    counter-increment: count 1;
-  }
-  20% {
-    counter-increment: count 2;
-  }
-  30% {
-    counter-increment: count 3;
-  }
-  40% {
-    counter-increment: count 4;
-  }
-  50% {
-    counter-increment: count 5;
-  }
-  60% {
-    counter-increment: count 6;
-  }
-  70% {
-    counter-increment: count 7;
-  }
-  80% {
-    counter-increment: count 8;
-  }
-  90% {
-    counter-increment: count 9;
-  }
-  100% {
-    counter-increment: count 10;
-  }
-}
-    */
 
     if (dataPoint.rank > DISPLAY_COUNT) {
       customElement.style.opacity = "0";
     } else {
       customElement.style.opacity = "1";
     }
+
+    if (datasetIndex == 0 || !transitionValues) return;
+
+    const interval = setInterval(() => {
+      const _value =
+        transitionValuesCopy.length == 0 ? value : transitionValuesCopy.shift();
+      let displayValue = _value.toString();
+      if (displayValue.length == 2) {
+        displayValue = `${displayValue}.00`;
+      } else if (displayValue.length == 4) {
+        displayValue = `${displayValue}0`;
+      }
+      valueElement.textContent = displayValue;
+      if (transitionValuesCopy.length == 0) {
+        clearInterval(interval);
+        return;
+      }
+    }, CHART_UPDATE_DELAY / transitionValues.length);
   });
 };
 

@@ -19,8 +19,8 @@ body {
 }
 
 .chart-container {
-	width: 80%;
+	width: 100%;
 	position: relative;
-	/* overflow: hidden; */
+	overflow: hidden;
 	padding-right: 40px;
 }
