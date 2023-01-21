@@ -1,3 +1,22 @@
+// const DISPLAY_COUNT = 10;
+
+const DATES_COUNT = 100;
+const TRANSITION_VALUES_COUNT = 50;
+
+const CHART_UPDATE_DELAY = 2000;
+const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
+const Y_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
+const X_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
+
+const IMAGE_URL =
+  "https://img.freepik.com/free-icon/soccer-player_318-174100.jpg";
+
+const IS_TOUCH_DEVICE = "ontouchstart" in window;
+
+let canApplyTransitionsOfXAxis = false;
+
+setTimeout(() => (canApplyTransitionsOfXAxis = true), 500);
+
 const RANDOM_NAMES = [
   "Silas Wagner",
   "Jarred Walters",
@@ -9,146 +28,146 @@ const RANDOM_NAMES = [
   "Shannon Roberts",
   "Jerald Carson",
   "Al Kline",
-  // "Lesley Peters",
-  // "Dallas Hill",
-  // "Jewel Flynn",
-  // "Margo Harrell",
-  // "Silvia Alvarado",
-  // "Eve Burch",
-  // "Christoper Wong",
-  // "Emma Farrell",
-  // "Tomas Newman",
-  // "Raymundo Barnett",
-  // "Rocco Kim",
-  // "Jayson Barber",
-  // "Lessie Lowery",
-  // "Stacie Stafford",
-  // "Garth Vasquez",
-  // "Nickolas Matthews",
-  // "Rosario Gilmore",
-  // "Jillian Hicks",
-  // "Gail Santana",
-  // "Omar Boyd",
-  // "Veronica Riddle",
-  // "Tabitha Weaver",
-  // "Mattie Spence",
-  // "Nelson Ballard",
-  // "Josephine Mccarty",
-  // "Bert Calderon",
-  // "Rowena Patterson",
-  // "Francisca Wilkerson",
-  // "Marva Baldwin",
-  // "Myra Espinoza",
-  // "Heriberto Padilla",
-  // "Felton Bass",
-  // "Effie Combs",
-  // "Leonor Campos",
-  // "Irma Middleton",
-  // "Clark Wall",
-  // "Dorothy Harrison",
-  // "Palmer Jarvis",
-  // "Antwan Ball",
-  // "Ervin Aguirre",
-  // "Otto Robles",
-  // "Trent Moreno",
-  // "Francisco Carney",
-  // "Delores Abbott",
-  // "Wayne Turner",
-  // "Hillary Powell",
-  // "Vicki Crawford",
-  // "Vance Avery",
-  // "Darell Gibson",
-  // "Shauna Rodriguez",
-  // "Melissa Thornton",
-  // "Ronda Bowers",
-  // "Tobias Lloyd",
-  // "Jane Villanueva",
-  // "Joel Parks",
-  // "Jolene Jackson",
-  // "Marcellus Berry",
-  // "Foster Buck",
-  // "Brandie Hawkins",
-  // "Darrell Erickson",
-  // "Millicent Ho",
-  // "Thaddeus Simmons",
-  // "Carson Dalton",
-  // "Christian Flores",
-  // "Bert Mooney",
-  // "Micheal House",
-  // "Lindsey Novak",
-  // "Murray Pope",
-  // "Wilbert Rojas",
-  // "Helen Stein",
-  // "Josefina Chambers",
-  // "Kari Decker",
-  // "Estelle Ewing",
-  // "Cliff Pugh",
-  // "Korey Mcfarland",
-  // "Elsie York",
-  // "Alice Cooper",
-  // "Mattie Hobbs",
-  // "Lilian Zuniga",
-  // "Amos Duffy",
-  // "Ronny Munoz",
-  // "Leo Oconnor",
-  // "Curt Rowe",
-  // "Sharron Cruz",
-  // "Thurman Harrington",
-  // "Cary Richmond",
-  // "Jerry Stephenson",
-  // "Margery Hunt",
-  // "Rebekah Rivas",
-  // "Beverley Austin",
-  // "Silas Wagner",
-  // "Jarred Walters",
-  // "Cleo Watts",
-  // "Josefa Costa",
-  // "Kasey Robertson",
-  // "Max Skinner",
-  // "Edgar Bright",
-  // "Shannon Roberts",
-  // "Jerald Carson",
-  // "Al Kline",
-  // "Lesley Peters",
-  // "Dallas Hill",
-  // "Jewel Flynn",
-  // "Margo Harrell",
-  // "Silvia Alvarado",
-  // "Eve Burch",
-  // "Christoper Wong",
-  // "Emma Farrell",
-  // "Tomas Newman",
-  // "Raymundo Barnett",
-  // "Rocco Kim",
-  // "Jayson Barber",
-  // "Lessie Lowery",
-  // "Stacie Stafford",
-  // "Garth Vasquez",
-  // "Nickolas Matthews",
-  // "Rosario Gilmore",
-  // "Jillian Hicks",
-  // "Gail Santana",
-  // "Omar Boyd",
-  // "Veronica Riddle",
-  // "Tabitha Weaver",
-  // "Mattie Spence",
-  // "Nelson Ballard",
-  // "Josephine Mccarty",
-  // "Bert Calderon",
-  // "Rowena Patterson",
-  // "Francisca Wilkerson",
-  // "Marva Baldwin",
-  // "Myra Espinoza",
-  // "Heriberto Padilla",
-  // "Felton Bass",
-  // "Effie Combs",
-  // "Leonor Campos",
-  // "Irma Middleton",
-  // "Clark Wall",
-  // "Dorothy Harrison",
-  // "Palmer Jarvis",
-  // "Antwan Ball",
-  // "Ervin Aguirre",
+  "Lesley Peters",
+  "Dallas Hill",
+  "Jewel Flynn",
+  "Margo Harrell",
+  "Silvia Alvarado",
+  "Eve Burch",
+  "Christoper Wong",
+  "Emma Farrell",
+  "Tomas Newman",
+  "Raymundo Barnett",
+  "Rocco Kim",
+  "Jayson Barber",
+  "Lessie Lowery",
+  "Stacie Stafford",
+  "Garth Vasquez",
+  "Nickolas Matthews",
+  "Rosario Gilmore",
+  "Jillian Hicks",
+  "Gail Santana",
+  "Omar Boyd",
+  "Veronica Riddle",
+  "Tabitha Weaver",
+  "Mattie Spence",
+  "Nelson Ballard",
+  "Josephine Mccarty",
+  "Bert Calderon",
+  "Rowena Patterson",
+  "Francisca Wilkerson",
+  "Marva Baldwin",
+  "Myra Espinoza",
+  "Heriberto Padilla",
+  "Felton Bass",
+  "Effie Combs",
+  "Leonor Campos",
+  "Irma Middleton",
+  "Clark Wall",
+  "Dorothy Harrison",
+  "Palmer Jarvis",
+  "Antwan Ball",
+  "Ervin Aguirre",
+  "Otto Robles",
+  "Trent Moreno",
+  "Francisco Carney",
+  "Delores Abbott",
+  "Wayne Turner",
+  "Hillary Powell",
+  "Vicki Crawford",
+  "Vance Avery",
+  "Darell Gibson",
+  "Shauna Rodriguez",
+  "Melissa Thornton",
+  "Ronda Bowers",
+  "Tobias Lloyd",
+  "Jane Villanueva",
+  "Joel Parks",
+  "Jolene Jackson",
+  "Marcellus Berry",
+  "Foster Buck",
+  "Brandie Hawkins",
+  "Darrell Erickson",
+  "Millicent Ho",
+  "Thaddeus Simmons",
+  "Carson Dalton",
+  "Christian Flores",
+  "Bert Mooney",
+  "Micheal House",
+  "Lindsey Novak",
+  "Murray Pope",
+  "Wilbert Rojas",
+  "Helen Stein",
+  "Josefina Chambers",
+  "Kari Decker",
+  "Estelle Ewing",
+  "Cliff Pugh",
+  "Korey Mcfarland",
+  "Elsie York",
+  "Alice Cooper",
+  "Mattie Hobbs",
+  "Lilian Zuniga",
+  "Amos Duffy",
+  "Ronny Munoz",
+  "Leo Oconnor",
+  "Curt Rowe",
+  "Sharron Cruz",
+  "Thurman Harrington",
+  "Cary Richmond",
+  "Jerry Stephenson",
+  "Margery Hunt",
+  "Rebekah Rivas",
+  "Beverley Austin",
+  "Silas Wagner",
+  "Jarred Walters",
+  "Cleo Watts",
+  "Josefa Costa",
+  "Kasey Robertson",
+  "Max Skinner",
+  "Edgar Bright",
+  "Shannon Roberts",
+  "Jerald Carson",
+  "Al Kline",
+  "Lesley Peters",
+  "Dallas Hill",
+  "Jewel Flynn",
+  "Margo Harrell",
+  "Silvia Alvarado",
+  "Eve Burch",
+  "Christoper Wong",
+  "Emma Farrell",
+  "Tomas Newman",
+  "Raymundo Barnett",
+  "Rocco Kim",
+  "Jayson Barber",
+  "Lessie Lowery",
+  "Stacie Stafford",
+  "Garth Vasquez",
+  "Nickolas Matthews",
+  "Rosario Gilmore",
+  "Jillian Hicks",
+  "Gail Santana",
+  "Omar Boyd",
+  "Veronica Riddle",
+  "Tabitha Weaver",
+  "Mattie Spence",
+  "Nelson Ballard",
+  "Josephine Mccarty",
+  "Bert Calderon",
+  "Rowena Patterson",
+  "Francisca Wilkerson",
+  "Marva Baldwin",
+  "Myra Espinoza",
+  "Heriberto Padilla",
+  "Felton Bass",
+  "Effie Combs",
+  "Leonor Campos",
+  "Irma Middleton",
+  "Clark Wall",
+  "Dorothy Harrison",
+  "Palmer Jarvis",
+  "Antwan Ball",
+  "Ervin Aguirre",
   // "Otto Robles",
   // "Trent Moreno",
   // "Francisco Carney",
@@ -301,21 +320,26 @@ const RANDOM_NAMES = [
   // "Beverley Austin",
 ].map((name, i) => `${name} ${i}`);
 
-let canApplyTransitionsOfXAxis = false;
-
-setTimeout(() => (canApplyTransitionsOfXAxis = true), 500);
+console.log(RANDOM_NAMES.length);
 
 const DISPLAY_COUNT = 10;
-const DATES_COUNT = 100;
-const TRANSITION_VALUES_COUNT = 100;
+// const DISPLAY_COUNT = RANDOM_NAMES.length;
 
-const CHART_UPDATE_DELAY = 2000;
-const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
-const Y_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
-const X_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
+let aspectRatio = IS_TOUCH_DEVICE
+  ? 1 / (DISPLAY_COUNT / 10)
+  : 1 / (DISPLAY_COUNT / 15);
 
-const IMAGE_URL =
-  "https://img.freepik.com/free-icon/soccer-player_318-174100.jpg";
+function useSmoothRandom(factor, start) {
+  let last = start !== undefined ? start : Math.random();
+  const halfEnvelope = 1 / factor / 2;
+  return function () {
+    // clamp output range to [0,1] as Math.random()
+    const max = Math.min(1, last + halfEnvelope);
+    const min = Math.max(0.5, last - halfEnvelope);
+    // return a number within halfRange of the last returned value
+    return (last = Math.random() * (max - min) + min);
+  };
+}
 
 const dates = Array.from({ length: DATES_COUNT }, (_, i) => {
   const date = new Date();
@@ -323,41 +347,47 @@ const dates = Array.from({ length: DATES_COUNT }, (_, i) => {
   return date;
 }).sort((a, b) => a - b);
 
-const datasets = dates.map((date) => {
-  // const value = Math.random() * 50 + 50;
-  const value = Math.random() * 100;
-  const values = [];
-
-  for (let i = 0; i < RANDOM_NAMES.length; i++) {
-    const random = Math.random() - 0.5;
-    const newValue = value + random;
-    values.push({ rank: i + 1, value: Math.round(newValue * 100) / 100 });
+const valuesByName = {};
+for (let i = 0; i < RANDOM_NAMES.length; i++) {
+  const name = RANDOM_NAMES[i];
+  let smoothRandom = useSmoothRandom(10);
+  let values = [];
+  while (values.length < DATES_COUNT) {
+    values.push({
+      value: smoothRandom(),
+      name: name,
+      date: dates[values.length].toISOString(),
+    });
   }
+  const parsedValues = values.map((v) => {
+    return {
+      ...v,
+      value: v.value * 100,
+      displayValue: (v.value * 100).toFixed(2),
+    };
+  });
+  valuesByName[name] = {
+    name: name,
+    values: parsedValues,
+  };
+}
 
-  const sortedValues = values
-    .sort((a, b) => b.value - a.value)
-    .map((a, i) => ({ ...a, rank: i + 1 }));
-
-  const allNamesIndexes = Array.from(
-    { length: RANDOM_NAMES.length },
-    (_, i) => i
-  );
-  allNamesIndexes.sort(() => Math.random() - 0.5);
-
-  const datapoints = sortedValues.map((a, i) => {
-    const name = RANDOM_NAMES[allNamesIndexes[i]];
+const datasets = dates.map((date) => {
+  const datapoints = Object.values(valuesByName).map((v, i) => {
+    const value = v.values.find((v) => v.date === date.toISOString());
+    const name = v.name;
     const normalizedName = name.replace(/\s/g, "-").toLowerCase();
     const displayName = name.split(" ").slice(0, 2).join(" ");
-    const { value: value, rank } = a;
     return {
       id: `${normalizedName}-${i}`,
-      x: value,
+      x: value.value,
       nextDatapoint: null,
       previousDatapoint: null,
       transitionValues: [],
       y: name,
-      rank: rank,
-      value: value,
+      rank: null,
+      value: value.value,
+      displayValue: value.displayValue,
       name: name,
       displayName: displayName,
       normalizedName: normalizedName,
@@ -369,13 +399,18 @@ const datasets = dates.map((date) => {
     label: date.toISOString(),
     data: datapoints,
     // backgroundColor: `rgba(255, 255, 255, 0.1)`,
-    backgroundColor: `rgba(255, 255, 255, 0)`,
     // borderColor: `rgba(255, 255, 255, 0.1)`,
-    borderColor: `rgba(255, 255, 255, 0)`,
+    backgroundColor: `transparent`,
+    borderColor: `transparent`,
   };
 });
 
 datasets.forEach((dataset, datasetIndex) => {
+  dataset.data
+    .sort((a, b) => b.x - a.x)
+    .forEach((datapoint, i) => {
+      datapoint.rank = i + 1;
+    });
   const { data } = dataset;
   let previousDataset = datasetIndex > 0 ? datasets[datasetIndex - 1] : null;
   let nextDataset =
@@ -437,8 +472,6 @@ const chartId = "chart";
 let chart, canvas, ctx;
 let afterDatasetsUpdateCalled = false;
 
-const IS_TOUCH_DEVICE = "ontouchstart" in window;
-
 const initializeChart = () => {
   canvas = document.getElementById(chartId);
   ctx = canvas.getContext("2d");
@@ -464,7 +497,7 @@ const initializeChart = () => {
     ],
     options: {
       responsive: true,
-      aspectRatio: IS_TOUCH_DEVICE ? 1 : 2,
+      aspectRatio: aspectRatio,
       maintainAspectRatio: true,
       indexAxis: "y",
       elements: {
@@ -481,7 +514,6 @@ const initializeChart = () => {
           easing: "linear",
         },
         x: {
-          // duration: X_SCALE_ANIMATION_DURATION,
           duration: 0,
           easing: "linear",
         },
@@ -492,7 +524,7 @@ const initializeChart = () => {
           display: false,
         },
         tooltip: {
-          enabled: true,
+          enabled: false,
         },
       },
       scales: {
@@ -552,6 +584,8 @@ const initializeChart = () => {
 
 initializeChart();
 
+let intervalCallbackIsSet = false;
+
 const setOverlayElements = (chart, datasetIndex) => {
   const { ctx, scales } = chart;
   // const chartDomRect = ctx.canvas.getBoundingClientRect();
@@ -570,6 +604,7 @@ const setOverlayElements = (chart, datasetIndex) => {
     if (!customElement) {
       customElement = document.createElement("div");
       customElement.id = cssId;
+      customElement.classList.add("custom-element");
       // customElement.dataset.dataPoint = JSON.stringify(dataPoint);
       chartContainer.appendChild(customElement);
     }
@@ -588,23 +623,20 @@ const setOverlayElements = (chart, datasetIndex) => {
     const width = pixelForValueXRight - pixelForValueXLeft;
 
     customElement.style.transition = `all ${Y_SCALE_ANIMATION_DURATION}ms linear`;
-    customElement.style.position = "absolute";
     customElement.style.top = `${top}px`;
     customElement.style.left = `${left}px`;
-    // customElement.style.width = `${width}px`;
-    customElement.style.width = `${100}%`;
     customElement.style.transform = `translateY(-${tickHeight / 2}px)`;
-    customElement.style.zIndex = "2";
     customElement.style.height = `${height}px`;
-    customElement.style.pointerEvents = "none";
-    customElement.style.display = "flex";
-    customElement.style.alignItems = "center";
-    customElement.style.justifyContent = "flex-start";
-    customElement.style.font = "'Roboto', sans-serif";
-    customElement.style.pointerEvents = "none";
-    customElement.style.overflow = "hidden";
 
-    const { value, displayName, transitionValues, nextDatapoint } = datapoint;
+    const {
+      value,
+      rank,
+      displayValue,
+      displayName,
+      transitionValues,
+      nextDatapoint,
+      previousDatapoint,
+    } = datapoint;
     const transitionValuesCopy = [...transitionValues];
 
     let innerContentElement = customElement.querySelector(".inner-content");
@@ -618,7 +650,7 @@ const setOverlayElements = (chart, datasetIndex) => {
       <img src="${IMAGE_URL}" />
       </div>
       <div class="value">
-      ${value}
+      ${displayValue}
       </div>
       </div>
       `;
@@ -627,27 +659,10 @@ const setOverlayElements = (chart, datasetIndex) => {
     }
 
     innerContentElement.style.transition = `max-width ${Y_SCALE_ANIMATION_DURATION}ms linear`;
-    innerContentElement.style.display = "flex";
-    innerContentElement.style.alignItems = "center";
-    innerContentElement.style.justifyContent = "flex-end";
-    innerContentElement.style.width = "100%";
-    innerContentElement.style.maxWidth = `${width}px`;
+    innerContentElement.style.maxWidth = `${width - 8}px`;
     innerContentElement.style.height = `calc(100% - ${ADJUSTMENT * 2}px)`;
-    innerContentElement.style.position = "relative";
     innerContentElement.style.margin = `${ADJUSTMENT}px ${0}px`;
     innerContentElement.style.padding = `${0}px ${ADJUSTMENT}px`;
-    innerContentElement.style.background = "rgba(255,255,255,0.1)";
-    innerContentElement.style.textAlign = "right";
-    // innerContentElement.style.overflow = "hidden";
-
-    const nameElement = customElement.querySelector(".name");
-    nameElement.style.color = "white";
-    nameElement.style.fontWeight = "600";
-    nameElement.style.fontSize = "80%";
-    nameElement.style.fontStyle = "italic";
-    nameElement.style.whiteSpace = "nowrap";
-    nameElement.style.overflow = "hidden";
-    nameElement.style.textOverflow = "ellipsis";
 
     const avatarElement = customElement.querySelector(".avatar");
     avatarElement.style.width = `${imageWidth}px`;
@@ -655,24 +670,10 @@ const setOverlayElements = (chart, datasetIndex) => {
     avatarElement.style.marginLeft = `${ADJUSTMENT_2}px`;
     avatarElement.style.flexShrink = "0";
 
-    const imgElement = avatarElement.querySelector("img");
-    imgElement.style.width = `100%`;
-    imgElement.style.height = `100%`;
-    imgElement.style.borderRadius = "100%";
-    // imgElement.style.border = "1px solid rgba(255,255,255,0.25)";
-    imgElement.style.background = "black";
-
     const valueElement = customElement.querySelector(".value");
-    valueElement.style.position = "absolute";
-    valueElement.style.right = "0";
-    valueElement.style.top = "50%";
-    valueElement.style.transform = `translate(calc(100% + 4px), -50%)`;
     valueElement.style.marginLeft = `${ADJUSTMENT_2}px`;
-    valueElement.style.fontWeight = "300";
-    // valueElement.style.fontSize = "80%";
-    valueElement.style.fontStyle = "italic";
 
-    if (dataPoint.rank > DISPLAY_COUNT) {
+    if (rank > DISPLAY_COUNT) {
       customElement.style.opacity = "0";
     } else {
       customElement.style.opacity = "1";
@@ -680,21 +681,57 @@ const setOverlayElements = (chart, datasetIndex) => {
 
     if (datasetIndex == 0 || !transitionValues) return;
 
-    const interval = setInterval(() => {
-      const _value =
-        transitionValuesCopy.length == 0 ? value : transitionValuesCopy.shift();
-      let displayValue = _value.toString();
-      if (displayValue.length == 2) {
-        displayValue = `${displayValue}.00`;
-      } else if (displayValue.length == 4) {
-        displayValue = `${displayValue}0`;
-      }
-      valueElement.textContent = displayValue;
-      if (transitionValuesCopy.length == 0) {
-        clearInterval(interval);
-        return;
-      }
-    }, CHART_UPDATE_DELAY / transitionValues.length);
+    valueElement.textContent = displayValue;
+  });
+
+  if (datasetIndex == 0 || intervalCallbackIsSet == true) return;
+
+  intervalCallbackIsSet = true;
+
+  const interval = setInterval(() => {
+    datasets[datasetIndex].data.forEach((dataPoint, index) => {
+      const cssId = `${chartId}-custom-element-${dataPoint.normalizedName}`;
+      let customElement = document.querySelector(`#${cssId}`);
+      if (!customElement) return;
+      const valueElement = customElement.querySelector(".value");
+      const datapoint = datasets[datasetIndex].data[index];
+      const {
+        value,
+        rank,
+        displayValue,
+        displayName,
+        transitionValues,
+        nextDatapoint,
+        previousDatapoint,
+      } = datapoint;
+
+      if (datapoint.rank > DISPLAY_COUNT) return;
+      // if (previousDatapoint && previousDatapoint.rank > DISPLAY_COUNT) return;
+      // if (nextDatapoint && nextDatapoint.rank > DISPLAY_COUNT) return;
+
+      let totalDelay = 0;
+
+      transitionValues.forEach((transitionValue, transitionValueIndex) => {
+        totalDelay += CHART_UPDATE_DELAY / TRANSITION_VALUES_COUNT;
+        setTimeout(() => {
+          const _value = transitionValue;
+          let _displayValue = _value.toString();
+          if (_displayValue.length == 2) {
+            _displayValue = `${_displayValue}.00`;
+          } else if (_displayValue.length == 4) {
+            _displayValue = `${_displayValue}0`;
+          } else if (_displayValue.length > 5) {
+            _displayValue = `${_displayValue.slice(0, 5)}`;
+          }
+          valueElement.textContent = _displayValue;
+        }, totalDelay);
+        if (transitionValueIndex == transitionValues.length - 1) {
+          clearInterval(interval);
+          intervalCallbackIsSet = false;
+          return;
+        }
+      });
+    }, CHART_UPDATE_DELAY);
   });
 };
 
@@ -743,13 +780,10 @@ const updateChart = () => {
     );
     correspondingDataPoint.x = nextDatapoint.x;
   }
-  // if (currentDatasetIndex == 0) {
-  //   console.log(newLabels);
-  // }
+
   chart.config.data.datasets[0].borderColor = newBorderColor;
   chart.config.data.datasets[0].backgroundColor = newBackgroundColor;
   chart.config.data.labels = newLabels;
-  // chart.config.options.scales.x.max = 10;
 
   chart.update("active");
 };

@@ -19,8 +19,55 @@ body {
 }
 
 .chart-container {
-	width: 100%;
+	width: 90%;
 	position: relative;
 	overflow: hidden;
 	padding-right: 40px;
+}
+
+.custom-element {
+	position: absolute;
+	width: 100%;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	font: 'Roboto', sans-serif;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.custom-element .inner-content {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	width: 100%;
+	position: relative;
+	background: rgba(255, 255, 255, 0.1);
+	text-align: right;
+}
+
+.custom-element .inner-content .name {
+	color: white;
+	font-weight: 600;
+	font-size: 80%;
+	font-style: italic;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.custom-element .inner-content img {
+	width: 100%;
+	height: 100%;
+	border-radius: 100%;
+	background: black;
+}
+
+.custom-element .inner-content .value {
+	position: absolute;
+	right: 0;
+	top: 50%;
+	transform: translate(calc(100% + 4px), -50%);
+	font-weight: 300;
+	font-style: italic;
 }
