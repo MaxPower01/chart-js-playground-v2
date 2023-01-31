@@ -71,3 +71,7 @@ body {
 	font-weight: 300;
 	font-style: italic;
 }
+
+.no-transitions {
+	transition: none !important;
+}

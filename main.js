@@ -1,8 +1,8 @@
 // const DISPLAY_COUNT = 10;
 const DISPLAY_COUNT = 10;
 const OPPONENTS_COUNT = 100;
-const DATES_COUNT = 5 + 1;
-const TRANSITION_VALUES_COUNT = 100;
+const DATES_COUNT = 10 + 1;
+const TRANSITION_VALUES_COUNT = 50;
 const SMOOTHING_FACTOR = 25;
 
 const CHART_UPDATE_DELAY = 3000;
@@ -1469,9 +1469,10 @@ const initializeChart = () => {
 initializeChart();
 
 let intervalCallbackIsSet = false;
+let overlayInterval = null;
+let animationInterval = null;
 
 const setOverlayElements = (chart, datasetIndex) => {
-  let interval = null;
   const { ctx, scales } = chart;
   // const chartDomRect = ctx.canvas.getBoundingClientRect();
   // const yTicks = scales.y.ticks;
@@ -1600,7 +1601,7 @@ const setOverlayElements = (chart, datasetIndex) => {
 
   intervalCallbackIsSet = true;
 
-  interval = setInterval(() => {
+  overlayInterval = setInterval(() => {
     datasets[datasetIndex].dataForTransition.forEach((dataPoint, index) => {
       const cssId = `${chartId}-custom-element-${dataPoint.normalizedName}`;
       let customElement = document.querySelector(`#${cssId}`);
@@ -1632,8 +1633,8 @@ const setOverlayElements = (chart, datasetIndex) => {
           valueElement.textContent = _displayValue;
         }, totalDelay);
         if (transitionValueIndex == transitionValues.length - 1) {
-          if (interval != null) {
-            clearInterval(interval);
+          if (overlayInterval != null) {
+            clearInterval(overlayInterval);
             intervalCallbackIsSet = false;
             return;
           }
@@ -1646,9 +1647,37 @@ const setOverlayElements = (chart, datasetIndex) => {
 let currentDatasetIndex = 0;
 
 setOverlayElements(chart, 0);
+let resizeCallbackIsCalled = false;
 window.addEventListener("resize", (chart) => {
-  // TODO: Prevent animation during resize
-  setOverlayElements(chart, currentDatasetIndex);
+  if (resizeCallbackIsCalled) return;
+  resizeCallbackIsCalled = true;
+  const customElements = document.querySelectorAll(`.custom-element`);
+  setTimeout(() => {
+    if (customElements) {
+      customElements.forEach((customElement) => {
+        customElement.classList.add("no-transitions");
+        const innerContentElement =
+          customElement.querySelector(".inner-content");
+        if (innerContentElement) {
+          innerContentElement.classList.add("no-transitions");
+        }
+      });
+    }
+  }, 100);
+  setTimeout(() => {
+    setOverlayElements(chart, currentDatasetIndex);
+    if (customElements) {
+      customElements.forEach((customElement) => {
+        customElement.classList.add("no-transitions");
+        const innerContentElement =
+          customElement.querySelector(".inner-content");
+        if (innerContentElement) {
+          innerContentElement.classList.add("no-transitions");
+        }
+      });
+    }
+    resizeCallbackIsCalled = false;
+  }, 150);
 });
 
 const updateChart = () => {
@@ -1700,9 +1729,9 @@ const btnStart = document.getElementById("btn-start");
 btnStart.addEventListener("click", () => {
   updateChart();
   currentDatasetIndex++;
-  interval = setInterval(() => {
+  animationInterval = setInterval(() => {
     if (currentDatasetIndex >= datasets.length - 1) {
-      clearInterval(interval);
+      clearInterval(animationInterval);
       return;
     }
     updateChart();
@@ -1712,5 +1741,188 @@ btnStart.addEventListener("click", () => {
 
 const btnStop = document.getElementById("btn-stop");
 btnStop.addEventListener("click", () => {
-  clearInterval(interval);
+  clearInterval(animationInterval);
+});
+
+const opponentColors = [
+  "#0000FF25",
+  "#FF00FF25",
+  "#00FF0025",
+  "#FFFF0025",
+  "#00FFFF25",
+];
+
+const chartId2 = "chart-2";
+const canvas2 = document.getElementById(chartId2);
+const ctx2 = canvas2.getContext("2d");
+const chart2 = new Chart(ctx2, {
+  type: "bar",
+  data: {
+    datasets: [
+      {
+        label: "Opponent #1",
+        data: [
+          { x: 53, y: "VS #3", name: "Opponent #1" },
+          { x: 75, y: "VS #4", name: "Opponent #1" },
+          { x: 65, y: "VS #5", name: "Opponent #1" },
+          { x: 55, y: "VS #6", name: "Opponent #1" },
+          { x: 45, y: "VS #7", name: "Opponent #1" },
+        ],
+        backgroundColor: "#FF0000",
+      },
+      {
+        label: "Opponent #2",
+        data: [
+          { x: 41, y: "VS #3", name: "Opponent #2" },
+          { x: 65, y: "VS #4", name: "Opponent #2" },
+          { x: 55, y: "VS #5", name: "Opponent #2" },
+          { x: 45, y: "VS #6", name: "Opponent #2" },
+          { x: 35, y: "VS #7", name: "Opponent #2" },
+        ],
+        backgroundColor: "#00FF00",
+      },
+      // {
+      //   label: "Opponent #3",
+      //   data: [
+      //     { x: 100 - 53, y: "#1 VS #3", name: "Opponent #3" },
+      //     { x: 100 - 41, y: "#2 VS #3", name: "Opponent #3" },
+      //   ],
+      //   backgroundColor: "#0000FF50",
+      // },
+      // {
+      //   label: "Opponent #4",
+      //   data: [
+      //     { x: 100 - 75, y: "#1 VS #4", name: "Opponent #4" },
+      //     { x: 100 - 65, y: "#2 VS #4", name: "Opponent #4" },
+      //   ],
+      //   backgroundColor: "#FF00FF50",
+      // },
+      // {
+      //   label: "Opponent #5",
+      //   data: [
+      //     { x: 100 - 65, y: "#1 VS #5", name: "Opponent #5" },
+      //     { x: 100 - 55, y: "#2 VS #5", name: "Opponent #5" },
+      //   ],
+      //   backgroundColor: "#00FFFF50",
+      // },
+      // {
+      //   label: "Opponent #6",
+      //   data: [
+      //     { x: 100 - 55, y: "#1 VS #6", name: "Opponent #6" },
+      //     { x: 100 - 45, y: "#2 VS #6", name: "Opponent #6" },
+      //   ],
+      //   backgroundColor: "#FFFF0050",
+      // },
+      // {
+      //   label: "Opponent #7",
+      //   data: [
+      //     { x: 100 - 45, y: "#1 VS #7", name: "Opponent #7" },
+      //     { x: 100 - 35, y: "#2 VS #7", name: "Opponent #7" },
+      //   ],
+      //   backgroundColor: "#FFA50050",
+      // },
+    ],
+    // labels: [
+    //   "#1 VS #3",
+    //   "#2 VS #3",
+    //   "#1 VS #4",
+    //   "#2 VS #4",
+    //   "#1 VS #5",
+    //   "#2 VS #5",
+    //   "#1 VS #6",
+    //   "#2 VS #6",
+    //   "#1 VS #7",
+    //   "#2 VS #7",
+    // ],
+    labels: ["VS #3", "VS #4", "VS #5", "VS #6", "VS #7"],
+  },
+  plugins: [
+    {
+      beforeDatasetsDraw: function (chart, args, options) {
+        const {
+          ctx,
+          chartArea: { top, bottom, left, right, width, height },
+          scales: { x, y },
+        } = chart;
+        // Increment the opacity of the background color for each y-axis label
+        const numberOfTicks = y.ticks.length;
+        const tickHeight = y.getPixelForTick(1) - y.getPixelForTick(0);
+
+        for (let i = 0; i < numberOfTicks; i++) {
+          const drawTop = top + i * tickHeight;
+          ctx.fillStyle = opponentColors[i];
+          ctx.fillRect(left, drawTop, width, tickHeight);
+        }
+      },
+    },
+  ],
+  options: {
+    responsive: true,
+    aspectRatio: aspectRatio,
+    maintainAspectRatio: true,
+    indexAxis: "y",
+    elements: {
+      bar: {
+        borderWidth: 2,
+      },
+    },
+    responsive: true,
+    plugins: {
+      legend: {
+        // display: false,
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        // stacked: true,
+        grid: {
+          color: "rgba(255, 255, 255, 0.05)",
+        },
+        ticks: {
+          color: function (context) {
+            return "white";
+          },
+          font: function (context) {
+            return { size: 12, style: "normal" };
+          },
+        },
+        border: {
+          color: "rgba(255, 255, 255, 0.25)",
+        },
+        min: 0,
+        max: 100,
+        // grace: 10,
+      },
+      y: {
+        display: true,
+        // stacked: true,
+        beginAtZero: true,
+        position: "left",
+        grid: {
+          color: "rgba(255, 255, 255, 0.1)",
+        },
+        border: {
+          color: "rgba(255, 255, 255, 0.25)",
+        },
+        // min: 0,
+        // max: DISPLAY_COUNT - 1,
+        ticks: {
+          color: function (context) {
+            return "white";
+          },
+          font: function (context) {
+            return { size: 14, style: "normal", weight: "bold" };
+          },
+          // callback: function (val, index) {
+          //   const datapoint = datasets[0].data[index];
+          //   return `#${datapoint.rank}`;
+          // },
+        },
+      },
+    },
+  },
 });
