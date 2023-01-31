@@ -8,7 +8,7 @@
 		<title>ChartJS Playground</title>
 		<link rel="stylesheet" href="style.css">
 		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-		<script src="data.js" defer></script>
+		<script src="helpers.js" defer></script>
 		<script src="main.js" defer></script>
 		<script src="against-same-opponents.js" defer></script>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +25,11 @@
 			<button id="btn-reset">Reset</button>
 			<button id="btn-next">Next</button>
 			<button id="btn-previous">Previous</button>
+		</div>
+		<div class="progress-bar-container">
+			<div class="progress-bar">
+				<div class="progress-bar__filled-part"></div>
+			</div>
 		</div>
 		<div class="chart-container">
 			<canvas id="chart"></canvas>

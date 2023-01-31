@@ -3,6 +3,7 @@ html {
 	margin: 0;
 	padding: 0;
 }
+
 body {
 	margin: 0;
 	padding: 0;
@@ -19,10 +20,15 @@ body {
 }
 
 .chart-container {
-	width: 90%;
+	width: var(--chartContainerWidth);
 	position: relative;
 	overflow: hidden;
 	padding-right: 40px;
+}
+
+.progress-bar-container {
+	width: var(--chartContainerWidth);
+	position: relative;
 }
 
 .custom-element {
@@ -56,6 +62,7 @@ body {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+
 .custom-element .inner-content img {
 	width: 100%;
 	height: 100%;
@@ -74,4 +81,39 @@ body {
 
 .no-transitions {
 	transition: none !important;
+}
+
+
+.progress-bar {
+	background-color: #444251;
+	border: 0;
+	height: var(--progressHeight);
+	border-radius: 9px;
+	display: block;
+	margin-bottom: 0.25em;
+	margin-top: 0.5em;
+	position: relative;
+	width: 100%;
+	position: relative;
+	margin-bottom: 32px;
+}
+
+.progress-bar__filled-part {
+	background-color: #54b94885;
+	border: 1px solid #54b948;
+	height: var(--progressHeight);
+	border-radius: 9px;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	max-width: 0%;
+}
+
+
+
+
+:root {
+	--progressHeight: 6px;
+	--chartContainerWidth: 75%;
 }

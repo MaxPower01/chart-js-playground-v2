@@ -5,7 +5,7 @@ const DATES_COUNT = 10 + 1;
 const TRANSITION_VALUES_COUNT = 50;
 const SMOOTHING_FACTOR = 25;
 
-const CHART_UPDATE_DELAY = 3000;
+const CHART_UPDATE_DELAY = 1000;
 const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
 const Y_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
 const X_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
@@ -1447,7 +1447,7 @@ const plugins = [
         return;
       }
       afterDatasetsUpdateCalled = false;
-      setOverlayElements(chart, currentDatasetIndex);
+      updateOverlayElements(chart, currentDatasetIndex);
     },
     afterDatasetsUpdate(chart, args, pluginOptions) {
       afterDatasetsUpdateCalled = true;
@@ -1466,3 +1466,214 @@ const chartOptions = {
   plugins: optionPlugins,
   scales,
 };
+
+function getOverlayElementFor(
+  datapoint,
+  chartContainer,
+  barTop,
+  barLeft,
+  barHeight
+) {
+  const id = `${chartId}-custom-element-${datapoint.normalizedName}`;
+
+  let overlayElement = document.querySelector(`#${id}`);
+  if (!overlayElement) {
+    overlayElement = document.createElement("div");
+    overlayElement.id = id;
+    overlayElement.classList.add("custom-element");
+    chartContainer.appendChild(overlayElement);
+  }
+  overlayElement.style.transition = `all ${Y_SCALE_ANIMATION_DURATION}ms linear`;
+  overlayElement.style.top = `${barTop}px`;
+  overlayElement.style.left = `${barLeft}px`;
+  overlayElement.style.transform = `translateY(-${barHeight / 2}px)`;
+  overlayElement.style.height = `${barHeight}px`;
+  return overlayElement;
+}
+
+function udpateCurrentAndNextValueFor(
+  overlayElement,
+  displayValue,
+  transitionValues,
+  nextValue
+) {
+  overlayElement.dataset.value = displayValue;
+
+  if (transitionValues?.length > 0) {
+    nextValue = transitionValues[transitionValues.length - 1];
+    let nextDisplayValue = nextValue.toString();
+    if (nextDisplayValue.length == 2) {
+      nextDisplayValue = `${nextDisplayValue}.00`;
+    } else if (nextDisplayValue.length == 4) {
+      nextDisplayValue = `${nextDisplayValue}0`;
+    } else if (nextDisplayValue.length > 5) {
+      nextDisplayValue = `${nextDisplayValue.slice(0, 5)}`;
+    }
+    overlayElement.dataset.nextValue = nextDisplayValue;
+  }
+  return nextValue;
+}
+
+function setInnerContentFor(
+  overlayElement,
+  displayName,
+  displayValue,
+  barWidth,
+  margin,
+  imageWidth
+) {
+  let innerContentElement = overlayElement.querySelector(".inner-content");
+  if (!innerContentElement) {
+    const innerHtml = `
+      <div class="inner-content">
+      <div class="name">
+      ${displayName}
+      </div>
+      <div class="avatar">
+      <img src="${IMAGE_URL}" />
+      </div>
+      <div class="value">
+      ${displayValue}
+      </div>
+      </div>
+      `;
+    overlayElement.innerHTML = innerHtml;
+    innerContentElement = overlayElement.querySelector(".inner-content");
+  }
+
+  innerContentElement.style.transition = `max-width ${Y_SCALE_ANIMATION_DURATION}ms linear`;
+  innerContentElement.style.maxWidth = `${barWidth - 8}px`;
+  innerContentElement.style.height = `calc(100% - ${margin * 2}px)`;
+  innerContentElement.style.margin = `${margin}px ${0}px`;
+  innerContentElement.style.padding = `${0}px ${margin}px`;
+
+  const avatarElement = overlayElement.querySelector(".avatar");
+  avatarElement.style.width = `${imageWidth}px`;
+  avatarElement.style.height = `${imageWidth}px`;
+  avatarElement.style.marginLeft = `${margin * 2}px`;
+  avatarElement.style.flexShrink = "0";
+}
+
+function updateLayoutAndContent(
+  datasetIndex,
+  scales,
+  barHeight,
+  imageWidth,
+  chartContainer,
+  margin,
+  isFirstDataset,
+  isLastDataset
+) {
+  datasets[datasetIndex].data.forEach((datapoint, index) => {
+    const barTop = scales.y.getPixelForValue(index);
+    const barLeft = scales.x.left;
+    const barRight = scales.x.getPixelForValue(datapoint.x);
+    const barWidth = barRight - barLeft;
+
+    if (index == 0) {
+      barHeight = scales.y.getPixelForValue(index + 1) - barTop;
+      imageWidth = barHeight / 1.75;
+    }
+
+    const overlayElement = getOverlayElementFor(
+      datapoint,
+      chartContainer,
+      barTop,
+      barLeft,
+      barHeight
+    );
+
+    const { value, rank, displayValue, displayName, transitionValues } =
+      datapoint;
+
+    let nextValue = null;
+
+    nextValue = udpateCurrentAndNextValueFor(
+      overlayElement,
+      displayValue,
+      transitionValues,
+      nextValue
+    );
+
+    setInnerContentFor(
+      overlayElement,
+      displayName,
+      displayValue,
+      barWidth,
+      margin,
+      imageWidth
+    );
+
+    const valueElement = overlayElement.querySelector(".value");
+    valueElement.style.marginLeft = `${margin * 2}px`;
+
+    if (rank > DISPLAY_COUNT) {
+      overlayElement.style.opacity = "0";
+    } else {
+      overlayElement.style.opacity = "1";
+    }
+
+    if (isFirstDataset || isLastDataset) return;
+
+    valueElement.textContent = displayValue;
+  });
+}
+
+function setTransitionsForDataset(currentDatasetIndex) {
+  datasets[currentDatasetIndex].dataForTransition.forEach(
+    (datapoint, index) => {
+      const customElement = document.querySelector(
+        `#${chartId}-custom-element-${datapoint.normalizedName}`
+      );
+      if (!customElement) return;
+
+      const valueElement = customElement.querySelector(".value");
+      if (!valueElement) return;
+
+      const { transitionValues } = datasets[currentDatasetIndex].data[index];
+
+      // if (datapoint.rank > DISPLAY_COUNT) return;
+      // if (previousDatapoint && previousDatapoint.rank > DISPLAY_COUNT) return;
+      // if (nextDatapoint && nextDatapoint.rank > DISPLAY_COUNT) return;
+
+      let totalDelay = 0;
+
+      transitionValues.forEach((transitionValue, transitionValueIndex) => {
+        totalDelay += CHART_UPDATE_DELAY / TRANSITION_VALUES_COUNT;
+        setTimeout(() => {
+          const _value = transitionValue;
+          let _displayValue = _value.toString();
+          if (_displayValue.length == 2) {
+            _displayValue = `${_displayValue}.00`;
+          } else if (_displayValue.length == 4) {
+            _displayValue = `${_displayValue}0`;
+          } else if (_displayValue.length > 5) {
+            _displayValue = `${_displayValue.slice(0, 5)}`;
+          }
+          valueElement.textContent = _displayValue;
+        }, totalDelay);
+        if (transitionValueIndex == transitionValues.length - 1) {
+          if (overlayInterval != null) {
+            clearInterval(overlayInterval);
+            overlayInterval = null;
+            return;
+          }
+        }
+      });
+    },
+    CHART_UPDATE_DELAY
+  );
+}
+
+function parseValue(transitionValue) {
+  const _value = transitionValue;
+  let _displayValue = _value.toString();
+  if (_displayValue.length == 2) {
+    _displayValue = `${_displayValue}.00`;
+  } else if (_displayValue.length == 4) {
+    _displayValue = `${_displayValue}0`;
+  } else if (_displayValue.length > 5) {
+    _displayValue = `${_displayValue.slice(0, 5)}`;
+  }
+  return _displayValue;
+}
