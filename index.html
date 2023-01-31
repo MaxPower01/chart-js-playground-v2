@@ -8,7 +8,9 @@
 		<title>ChartJS Playground</title>
 		<link rel="stylesheet" href="style.css">
 		<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<script src="data.js" defer></script>
 		<script src="main.js" defer></script>
+		<script src="against-same-opponents.js" defer></script>
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 		<link
@@ -19,13 +21,16 @@
 	<body>
 		<div style="display: flex; align-items: center; gap: 8px;">
 			<button id="btn-start">Start</button>
-			<button id="btn-stop">Stop</button>
+			<button id="btn-pause">Pause</button>
+			<button id="btn-reset">Reset</button>
+			<button id="btn-next">Next</button>
+			<button id="btn-previous">Previous</button>
 		</div>
 		<div class="chart-container">
 			<canvas id="chart"></canvas>
 		</div>
 
-		<div class="chart-container">
+		<div class="chart-container" style="margin-top: 32px;">
 			<canvas id="chart-2"></canvas>
 		</div>
 	</body>
