@@ -5,10 +5,11 @@ const DATES_COUNT = 10 + 1;
 const TRANSITION_VALUES_COUNT = 50;
 const SMOOTHING_FACTOR = 25;
 
-const CHART_UPDATE_DELAY = 1000;
-const COLOR_ANIMATION_DURATION = CHART_UPDATE_DELAY / 2;
-const Y_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
-const X_SCALE_ANIMATION_DURATION = CHART_UPDATE_DELAY;
+const DEFAULT_CHART_UPDATE_DELAY = 2000;
+let chartUpdateDelay = DEFAULT_CHART_UPDATE_DELAY;
+const colorAnimationDuration = () => chartUpdateDelay / 2;
+const yScaleAnimationDuration = () => chartUpdateDelay;
+const xScaleAnimationDuration = () => chartUpdateDelay;
 
 const IMAGE_URL =
   "https://img.freepik.com/free-icon/soccer-player_318-174100.jpg";
@@ -1250,11 +1251,17 @@ function getDates() {
   }).sort((a, b) => a - b);
 }
 
+const _dates = getDates();
+
+let minimumValue = null;
+let maximumValue = null;
+
 function getValuesByName() {
   const valuesByName = {};
+  const dates = [..._dates];
   for (let i = 0; i < RANDOM_NAMES.length; i++) {
     const name = RANDOM_NAMES[i];
-    let smoothRandom = useSmoothRandom(SMOOTHING_FACTOR);
+    let smoothRandom = useSmoothRandom(SMOOTHING_FACTOR, 0.5);
     let values = [];
     while (values.length < DATES_COUNT) {
       values.push({
@@ -1264,10 +1271,18 @@ function getValuesByName() {
       });
     }
     const parsedValues = values.map((v) => {
+      const value = v.value * 100;
+      const displayValue = value.toFixed(2);
+      if (minimumValue === null || value < minimumValue) {
+        minimumValue = value;
+      }
+      if (maximumValue === null || value > maximumValue) {
+        maximumValue = value;
+      }
       return {
         ...v,
-        value: v.value * 100,
-        displayValue: (v.value * 100).toFixed(2),
+        value,
+        displayValue,
       };
     });
     valuesByName[name] = {
@@ -1278,11 +1293,12 @@ function getValuesByName() {
   return valuesByName;
 }
 
-const dates = getDates();
-
-const valuesByName = getValuesByName();
+const _valuesByName = getValuesByName();
 
 function getDatasets() {
+  const dates = [..._dates];
+  const valuesByName = { ..._valuesByName };
+
   const datasets = dates.map((date) => {
     const datapoints = Object.values(valuesByName).map((v, i) => {
       const value = v.values.find((v) => v.date === date.toISOString());
@@ -1365,7 +1381,7 @@ function getDatasets() {
   return datasets;
 }
 
-const scales = {
+const optionScales = {
   x: {
     display: true,
     grid: {
@@ -1381,8 +1397,8 @@ const scales = {
     border: {
       color: "rgba(255, 255, 255, 0.25)",
     },
-    min: 0,
-    max: 100,
+    min: minimumValue == null ? null : Math.floor(minimumValue),
+    max: maximumValue == null ? null : Math.ceil(maximumValue),
   },
   y: {
     display: true,
@@ -1422,10 +1438,10 @@ const optionPlugins = {
 
 const optionAnimations = {
   colors: {
-    duration: COLOR_ANIMATION_DURATION,
+    duration: colorAnimationDuration(),
   },
   y: {
-    duration: Y_SCALE_ANIMATION_DURATION,
+    duration: 0,
     easing: "linear",
   },
   x: {
@@ -1443,14 +1459,15 @@ const optionElements = {
 const plugins = [
   {
     afterDatasetsDraw(chart, args, pluginOptions) {
-      if (!afterDatasetsUpdateCalled) {
+      if (!afterDatasetsUpdateWasCalled) {
         return;
       }
-      afterDatasetsUpdateCalled = false;
+      console.log("Calling chart's afterDatasetsDraw callback...");
+      afterDatasetsUpdateWasCalled = false;
       updateOverlayElements(chart, currentDatasetIndex);
     },
     afterDatasetsUpdate(chart, args, pluginOptions) {
-      afterDatasetsUpdateCalled = true;
+      afterDatasetsUpdateWasCalled = true;
     },
   },
 ];
@@ -1464,7 +1481,7 @@ const chartOptions = {
   animations: optionAnimations,
   responsive: true,
   plugins: optionPlugins,
-  scales,
+  scales: optionScales,
 };
 
 function getOverlayElementFor(
@@ -1474,16 +1491,16 @@ function getOverlayElementFor(
   barLeft,
   barHeight
 ) {
-  const id = `${chartId}-custom-element-${datapoint.normalizedName}`;
+  const id = `${chartId}-overlay-element-${datapoint.normalizedName}`;
 
   let overlayElement = document.querySelector(`#${id}`);
   if (!overlayElement) {
     overlayElement = document.createElement("div");
     overlayElement.id = id;
-    overlayElement.classList.add("custom-element");
+    overlayElement.classList.add("overlay-element");
     chartContainer.appendChild(overlayElement);
   }
-  overlayElement.style.transition = `all ${Y_SCALE_ANIMATION_DURATION}ms linear`;
+  // overlayElement.style.transition = `all ${Y_SCALE_ANIMATION_DURATION}ms linear`;
   overlayElement.style.top = `${barTop}px`;
   overlayElement.style.left = `${barLeft}px`;
   overlayElement.style.transform = `translateY(-${barHeight / 2}px)`;
@@ -1541,7 +1558,7 @@ function setInnerContentFor(
     innerContentElement = overlayElement.querySelector(".inner-content");
   }
 
-  innerContentElement.style.transition = `max-width ${Y_SCALE_ANIMATION_DURATION}ms linear`;
+  // innerContentElement.style.transition = `max-width ${Y_SCALE_ANIMATION_DURATION}ms linear`;
   innerContentElement.style.maxWidth = `${barWidth - 8}px`;
   innerContentElement.style.height = `calc(100% - ${margin * 2}px)`;
   innerContentElement.style.margin = `${margin}px ${0}px`;
@@ -1623,7 +1640,7 @@ function setTransitionsForDataset(currentDatasetIndex) {
   datasets[currentDatasetIndex].dataForTransition.forEach(
     (datapoint, index) => {
       const customElement = document.querySelector(
-        `#${chartId}-custom-element-${datapoint.normalizedName}`
+        `#${chartId}-overlay-element-${datapoint.normalizedName}`
       );
       if (!customElement) return;
 
@@ -1639,7 +1656,7 @@ function setTransitionsForDataset(currentDatasetIndex) {
       let totalDelay = 0;
 
       transitionValues.forEach((transitionValue, transitionValueIndex) => {
-        totalDelay += CHART_UPDATE_DELAY / TRANSITION_VALUES_COUNT;
+        totalDelay += chartUpdateDelay / TRANSITION_VALUES_COUNT;
         setTimeout(() => {
           const _value = transitionValue;
           let _displayValue = _value.toString();
@@ -1661,7 +1678,7 @@ function setTransitionsForDataset(currentDatasetIndex) {
         }
       });
     },
-    CHART_UPDATE_DELAY
+    chartUpdateDelay
   );
 }
 
@@ -1676,4 +1693,198 @@ function parseValue(transitionValue) {
     _displayValue = `${_displayValue.slice(0, 5)}`;
   }
   return _displayValue;
+}
+
+function dispatchChartAction(action) {
+  console.log("");
+  console.log("Dispatching chart action...");
+
+  lastDispatchedActions.push(action);
+  if (lastDispatchedActions.length > 5) {
+    lastDispatchedActions.shift();
+  }
+
+  chartContainer.dispatchEvent(
+    new CustomEvent("chart-action", {
+      detail: {
+        action,
+      },
+    })
+  );
+}
+
+function setProgressBar() {
+  console.log("Initializing progress bar...");
+  const dates = [..._dates];
+  dates.forEach((date, index) => {
+    const markerContainer = document.createElement("div");
+    markerContainer.classList.add("dataset-marker-container");
+    markerContainer.style.position = "absolute";
+    markerContainer.style.left = `${(index / (dates.length - 1)) * 100}%`;
+    markerContainer.style.top = "50%";
+    markerContainer.style.width = `${progressBar.clientHeight * 4}px`;
+    markerContainer.style.height = `${progressBar.clientHeight * 4}px`;
+    markerContainer.style.borderRadius = "999px";
+    markerContainer.style.backgroundColor = "transparent";
+    markerContainer.style.transform = "translate(-50%, -50%)";
+    markerContainer.style.display = "flex";
+    markerContainer.style.justifyContent = "center";
+    markerContainer.style.alignItems = "center";
+    markerContainer.style.cursor = "pointer";
+    markerContainer.style.zIndex = "1";
+    markerContainer.setAttribute("data-datasetindex", index);
+    progressBarContainer.appendChild(markerContainer);
+
+    const marker = document.createElement("div");
+    marker.classList.add("real-dataset-marker");
+    marker.style.height = `${progressBar.clientHeight / 2}px`;
+    marker.style.width = `${progressBar.clientHeight / 2}px`;
+    marker.style.borderRadius = "999px";
+    marker.style.backgroundColor = "rgba(255,255,255,0.75)";
+    marker.style.zIndex = "1";
+    markerContainer.appendChild(marker);
+  });
+}
+
+function chartResizedCallback(chart) {
+  const customElements = document.querySelectorAll(`.overlay-element`);
+  setTimeout(() => {
+    if (customElements) {
+      customElements.forEach((customElement) => {
+        customElement.classList.add("no-transitions");
+        const innerContentElement =
+          customElement.querySelector(".inner-content");
+        if (innerContentElement) {
+          innerContentElement.classList.add("no-transitions");
+        }
+      });
+    }
+  }, 100);
+  setTimeout(() => {
+    updateOverlayElements(chart, currentDatasetIndex);
+    if (customElements) {
+      customElements.forEach((customElement) => {
+        customElement.classList.add("no-transitions");
+        const innerContentElement =
+          customElement.querySelector(".inner-content");
+        if (innerContentElement) {
+          innerContentElement.classList.add("no-transitions");
+        }
+      });
+    }
+    resizeCallbackIsCalled = false;
+  }, 150);
+}
+
+function mergeData(currentDataset, nextDataset, chartData) {
+  return currentDataset.data
+    .map((datapoint, i) => {
+      const nextDatapoint = nextDataset.data.find(
+        (nextDatapoint) => nextDatapoint.name == datapoint.name
+      );
+      return {
+        labels: chartData.labels[i],
+        dataPoint: currentDataset.data[i],
+        nextDatapoint,
+        backgroundColor: currentDataset.backgroundColor[i],
+        borderColor: currentDataset.borderColor[i],
+      };
+    })
+    .sort((a, b) => {
+      return a.nextDatapoint.rank - b.nextDatapoint.rank;
+    });
+}
+
+function getNewData(mergedData) {
+  const newLabels = [];
+  const newBackgroundColor = [];
+  const newBorderColor = [];
+
+  for (let i = 0; i < mergedData.length; i++) {
+    const { labels, nextDatapoint, backgroundColor, borderColor } =
+      mergedData[i];
+    newLabels.push(`${nextDatapoint.y}`);
+    newBackgroundColor.push(nextDatapoint.backgroundColor);
+    newBorderColor.push(nextDatapoint.borderColor);
+    const correspondingDataPoint = chart.config.data.datasets[0].data.find(
+      (dataPoint) => dataPoint.y == nextDatapoint.y
+    );
+    correspondingDataPoint.x = nextDatapoint.x;
+  }
+
+  return {
+    newLabels,
+    newBackgroundColor,
+    newBorderColor,
+  };
+}
+
+function setTransitionProperties(chart) {
+  if (chart) {
+    chart.options.animations.x.duration = xScaleAnimationDuration();
+    chart.options.animations.y.duration = yScaleAnimationDuration();
+  }
+  const progressBarFilledPart = document.querySelector(
+    ".progress-bar__filled-part"
+  );
+  if (progressBarFilledPart) {
+    progressBarFilledPart.style.transition = `max-width ${chartUpdateDelay}ms linear`;
+  }
+  const overlayElements = document.querySelectorAll(`.overlay-element`);
+  if (overlayElements) {
+    overlayElements.forEach((overlayElement) => {
+      overlayElement.style.transition = `all ${yScaleAnimationDuration()}ms linear`;
+      const innerContentElement =
+        overlayElement.querySelector(".inner-content");
+      if (innerContentElement) {
+        innerContentElement.style.transition = `max-width ${yScaleAnimationDuration()}ms linear`;
+      }
+    });
+  }
+}
+
+function removeTransitionProperties(chart) {
+  if (chart) {
+    chart.options.animations.x.duration = 0;
+    chart.options.animations.y.duration = 0;
+  }
+  const progressBarFilledPart = document.querySelector(
+    ".progress-bar__filled-part"
+  );
+  if (progressBarFilledPart) {
+    progressBarFilledPart.style.transition = `none`;
+  }
+  const overlayElements = document.querySelectorAll(`.overlay-element`);
+  if (overlayElements) {
+    overlayElements.forEach((overlayElement) => {
+      overlayElement.style.transition = `none`;
+      const innerContentElement =
+        overlayElement.querySelector(".inner-content");
+      if (innerContentElement) {
+        innerContentElement.style.transition = `none`;
+      }
+    });
+  }
+}
+
+function updateChartControls() {
+  btnPlay.disabled = chartControlsState.btnPlay.disabled;
+  btnPause.disabled = chartControlsState.btnPause.disabled;
+  btnReset.disabled = chartControlsState.btnReset.disabled;
+  btnNext.disabled = chartControlsState.btnNext.disabled;
+  btnPrevious.disabled = chartControlsState.btnPrevious.disabled;
+  inputAnimationSpeed.disabled =
+    chartControlsState.inputAnimationSpeed.disabled;
+}
+
+function udpateAnimationDuration(chart, value) {
+  if (value == 1) {
+    chartUpdateDelay = 7000;
+  } else {
+    chartUpdateDelay = 10000 / value;
+  }
+
+  if (chart) {
+    setTransitionProperties(chart);
+  }
 }
