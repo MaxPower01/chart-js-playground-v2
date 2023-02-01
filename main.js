@@ -161,7 +161,7 @@ function updateOverlayElements(chart, datasetIndex) {
       let totalDelay = 0;
       const delayIncrement = chartUpdateDelay / TRANSITION_VALUES_COUNT;
 
-      const isLastTransitionDataset = index == DISPLAY_COUNT - 1;
+      const isLastTransitionDataset = index == maxIndexY;
 
       transitionValues.forEach((transitionValue, transitionValueIndex) => {
         totalDelay += delayIncrement;
@@ -240,8 +240,24 @@ btnPrevious.addEventListener("click", () => {
   dispatchChartAction("previous");
 });
 
+btnDown.addEventListener("click", () => {
+  dispatchChartAction("down", 1);
+});
+
+btnDownFast.addEventListener("click", () => {
+  dispatchChartAction("down", 10);
+});
+
+btnUp.addEventListener("click", () => {
+  dispatchChartAction("up", 1);
+});
+
+btnUpFast.addEventListener("click", () => {
+  dispatchChartAction("up", 10);
+});
+
 chartContainer.addEventListener("chart-action", (e) => {
-  const { action } = e.detail;
+  const { action, payload } = e.detail;
 
   console.log({
     state,
@@ -300,6 +316,16 @@ chartContainer.addEventListener("chart-action", (e) => {
         currentDatasetIndex--;
         updateChart();
       }
+      break;
+
+    case "down":
+      if (payload == undefined || typeof payload != "number") break;
+      scrollChart(action, payload);
+      break;
+
+    case "up":
+      if (payload == undefined || typeof payload != "number") break;
+      scrollChart(action, payload);
       break;
 
     default:
@@ -400,6 +426,38 @@ inputAnimationSpeed.addEventListener("blur", (e) => {
     e.target.value = 10;
     value = 10;
   }
+
   udpateAnimationDuration(chart, value);
   updateChartControls();
 });
+
+function scrollChart(direction, amount) {
+  console.log("Scrolling chart...");
+
+  if (!chart) return;
+
+  let newMinIndexY = minIndexY;
+  let newMaxIndexY = maxIndexY;
+
+  if (direction == "down") {
+    newMinIndexY += amount;
+    newMaxIndexY += amount;
+  } else if (direction == "up") {
+    newMinIndexY -= amount;
+    newMaxIndexY -= amount;
+  }
+
+  if (newMinIndexY == minIndexY || newMaxIndexY == maxIndexY) return;
+
+  chart.options.scales.y.min = newMinIndexY;
+  chart.options.scales.y.max = newMaxIndexY;
+
+  console.log({
+    currentMin: minIndexY,
+    currentMax: maxIndexY,
+    newMin: newMinIndexY,
+    newMax: newMaxIndexY,
+  });
+  chart.update();
+  updateOverlayElements(chart, currentDatasetIndex);
+}

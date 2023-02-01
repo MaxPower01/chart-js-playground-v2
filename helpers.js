@@ -1,6 +1,6 @@
 // const DISPLAY_COUNT = 10;
 const DISPLAY_COUNT = 10;
-const OPPONENTS_COUNT = 100;
+const OPPONENTS_COUNT = 10;
 const DATES_COUNT = 10 + 1;
 const TRANSITION_VALUES_COUNT = 50;
 const SMOOTHING_FACTOR = 25;
@@ -10,6 +10,9 @@ let chartUpdateDelay = DEFAULT_CHART_UPDATE_DELAY;
 const colorAnimationDuration = () => chartUpdateDelay / 2;
 const yScaleAnimationDuration = () => chartUpdateDelay;
 const xScaleAnimationDuration = () => chartUpdateDelay;
+
+let minIndexY = 0;
+let maxIndexY = DISPLAY_COUNT - 1;
 
 const IMAGE_URL =
   "https://img.freepik.com/free-icon/soccer-player_318-174100.jpg";
@@ -1256,6 +1259,13 @@ const _dates = getDates();
 let minimumValue = null;
 let maximumValue = null;
 
+function getMinimumValueForScaleX() {
+  if (minimumValue === null || maximumValue === null) return null;
+
+  const range = maximumValue - minimumValue;
+  return minimumValue - range * 0.1;
+}
+
 function getValuesByName() {
   const valuesByName = {};
   const dates = [..._dates];
@@ -1381,6 +1391,8 @@ function getDatasets() {
   return datasets;
 }
 
+// console.log(getMinimumValueForScaleX());
+
 const optionScales = {
   x: {
     display: true,
@@ -1410,8 +1422,8 @@ const optionScales = {
     border: {
       color: "rgba(255, 255, 255, 0.25)",
     },
-    min: 0,
-    max: DISPLAY_COUNT - 1,
+    min: minIndexY,
+    max: maxIndexY,
     ticks: {
       color: function (context) {
         return "white";
@@ -1695,7 +1707,7 @@ function parseValue(transitionValue) {
   return _displayValue;
 }
 
-function dispatchChartAction(action) {
+function dispatchChartAction(action, payload) {
   console.log("");
   console.log("Dispatching chart action...");
 
@@ -1708,6 +1720,7 @@ function dispatchChartAction(action) {
     new CustomEvent("chart-action", {
       detail: {
         action,
+        payload,
       },
     })
   );
